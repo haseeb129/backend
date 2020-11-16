@@ -96,6 +96,8 @@ def login(request):
     # print("User Data "+data["email"])
     username = data.get('username', '')
     password = data.get('password', '')
+    id = data.get('_id', '')
+    print("ID: ", id)
     user = auth.authenticate(username=username, password=password)
     print("After auth", user)
     if user:

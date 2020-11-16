@@ -26,7 +26,8 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
 
 from rest_framework import response, decorators, permissions, status
 
@@ -104,6 +105,7 @@ def applyMLAlgo(request):
         from sklearn.neighbors import KNeighborsClassifier
         model = KNeighborsClassifier()
     elif(mlAlgo == 'LinearDiscriminantAnalysis'):
+        print("LinearDiscriminantAnalysis")
         model = LinearDiscriminantAnalysis()
     elif(mlAlgo == 'GaussianNB'):
         from sklearn.naive_bayes import GaussianNB
@@ -113,10 +115,13 @@ def applyMLAlgo(request):
         model = SVC()
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
+    print("After 1")
     score = accuracy_score(y_test, prediction)
-    result = model.predict([featuresValues])
-    print("Result", result)
     print(score)
+    print("After 2")
+    result = model.predict([featuresValues])
+    print("After 3")
+    print("Result", result)
     matrix = confusion_matrix(y_test, prediction)
     report = classification_report(y_test, prediction, output_dict=True)
 

@@ -2,6 +2,7 @@
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from djongo import models
 
 User = get_user_model()
 
@@ -30,14 +31,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LoginSerializer(serializers.ModelSerializer):
-    print("in Login Serilaizer")
+    # print("in Login Serilaizer")
     password = serializers.CharField(
         max_length=65, min_length=8, write_only=True)
     username = serializers.CharField(max_length=255, min_length=2)
+    # itm = db.doctors.find_one({"username":username})
+    # _id = serializers.
 
     class Meta:
         model = User
-        fields = ['username', 'password']
+        fields = ['username', 'password', "_id"]
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
