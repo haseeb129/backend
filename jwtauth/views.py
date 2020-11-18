@@ -54,25 +54,34 @@ User = get_user_model()
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def registration(request):
+    print("Request: ", request.data)
     serializer = UserCreateSerializer(data=request.data)
     print(serializer.is_valid())
     if serializer.is_valid():
         print("before")
-        serializer.save()
-        print(serializer.data)
+
+        error = serializer.save()
+        print("validation error", error)
         auth_token = jwt.encode(
             {'username': serializer.data["username"], "email": serializer.data["email"]}, settings.SECRET_KEY)
         # print(user)
         # serializer = UserSerializer(user)
-
+        print(serializer.data)
         data = {'user': serializer.data, 'token': auth_token}
         print("data is ", data)
         return Response(data, status=status.HTTP_200_OK)
 
-        # return Response(serializer.data, status=status.HTTP_201_CREATED)
-    print("error")
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        print("error")
 
+        # return Response(serializer.data, status=status.HTTP_201_CREATED)
+    print("After Try error", serializer.errors)
+    # if(serializer.errors['username']):
+    #     return Response({"message": "This Username already exist."}, status=status.HTTP_400_BAD_REQUEST)
+    # elif(serializer.errors['email']):
+    #     return Response({"message": "This email already exist."}, status=status.HTTP_400_BAD_REQUEST)
+    # else:
+
+    return Response({"message": "System Error."}, status=status.HTTP_400_BAD_REQUEST)
     # serializer = UserCreateSerializer(data=request.data)
     # print(serializer.is_valid())
     # if not serializer.is_valid():

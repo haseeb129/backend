@@ -69,8 +69,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
         password = validated_data["password"]
         # password2 = validated_data["password2"]
         if (email and User.objects.filter(email=email).exclude(username=username).exists()):
-            raise serializers.ValidationError(
-                {"email": "Email addresses must be unique."})
+
+            return {"email": "Email addresses must be unique."}
+            # return serializers.ValidationError(
+            # {"email": "Email addresses must be unique."})
         # if password != password2:
         #     raise serializers.ValidationError(
         #         {"password": "The two passwords differ."})

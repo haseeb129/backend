@@ -47,8 +47,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'knox',
-    'accounts',
+    # 'accounts',
     'projectapi',
+    # 'FileUpload',
+    'UploadFile'
     # 'jwtauth'
 ]
 

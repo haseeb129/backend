@@ -16,7 +16,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from BasicCOCOMO import views
-from accounts import views as accountsViews
 from django.conf.urls import url, include as i
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -27,23 +26,13 @@ urlpatterns = [
     path('detailedCOCOMO/', include('BasicCOCOMO.detailedCOCOMO')),
     path('COCOMO2/', include("COCOMO2.urls")),
     path('ifpug/', include("ifpug.urls")),
-    path('register/', views.RegisterView, name="register"),
-    path('login/', views.LoginView, name="login"),
-    # path('register/', views.registerPage, name="register"),
-    # path('home/', views.home, name="home"),
-    # path('admin/', admin.site.urls),
-    # path('/', include("accounts.urls")),
-    url(r'^', i('accounts.urls')),
+    # path('register/', views.RegisterView, name="register"),
+    # path('login/', views.LoginView, name="login"),
     path('api-auth/', include("rest_framework.urls")),
     path('api/token/', TokenObtainPairView.as_view()),
     path('api/token/refresh', TokenRefreshView.as_view()),
-    # path('api/jwtauth/', views.getToken, name='jwtauth'),
     path('api/jwtauth/', include('jwtauth.urls'), name='jwtauth'),
     path('api/defect_prediction/',
-         include("projectapi.urls"), name="Defect_Prediction")
-    # path('api/login/', accountsViews.LoginAPI, name="Login"),
-
-    # path('register/', views.registerPage, name="register"),
-    # path('login/', views.loginPage, name="login"),
-    # path('logout/', views.logoutUser, name="logout"),
+         include("projectapi.urls"), name="Defect_Prediction"),
+    path('uploadfile/', include("UploadFile.urls")),
 ]
