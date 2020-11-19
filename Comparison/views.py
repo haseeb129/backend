@@ -7,7 +7,7 @@ from rest_framework.parsers import FileUploadParser
 from rest_framework.views import APIView
 # import pandas as pd
 
-
+import os
 import numpy as np
 import pandas as pd
 import sklearn as sklearn
@@ -29,7 +29,7 @@ from rest_framework import response, decorators, permissions, status
 
 def readCsv():
     data = pd.read_csv(
-        'E:\\FYP\\Defect-Prediction\\projectapi\\encoded_format.csv', decimal=',')
+        os.getcwd()+'\\Comparison\\encoded_format.csv', decimal=',')
     X = data.drop(["Defect Density"], axis=1)
     y = data["Defect Density"]
     # X = X.drop(["Total Defects Delivered"], axis=1)
