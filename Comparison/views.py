@@ -60,10 +60,14 @@ def conversion_to_defects(data):
     defect_present = new['Defects Present']
     y = defect_present
     return y
-# def sortFeatures(features):
 
 
-# @api_view(['POST', ])
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def getFeaturesNames(request):
+    data, X, y = readCsv()
+    return Response(data.columns)
+
 
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
