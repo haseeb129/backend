@@ -35,4 +35,5 @@ urlpatterns = [
     path('api/defect_prediction/',
          include("projectapi.urls"), name="Defect_Prediction"),
     path('uploadfile/', include("UploadFile.urls")),
+    path('comparison/', include("Comparison.urls")),
 ]

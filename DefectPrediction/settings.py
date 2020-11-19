@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     # 'accounts',
     'projectapi',
     # 'FileUpload',
-    'UploadFile'
+    'UploadFile',
+    'Comparison',
     # 'jwtauth'
 ]
 
