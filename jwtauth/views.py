@@ -19,38 +19,6 @@ from rest_framework.generics import GenericAPIView
 User = get_user_model()
 
 
-# class RegisterView(GenericAPIView):
-#     # serializer_class = UserSerializer
-
-#     def post(self, request):
-#         serializer = UserCreateSerializer(data=request.data)
-#         if not serializer.is_valid():
-#             return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-#         user = serializer.save()
-#         refresh = RefreshToken.for_user(user)
-#         res = {
-#             "refresh": str(refresh),
-#             "access": str(refresh.access_token),
-#         }
-#         return response.Response(res, status.HTTP_201_CREATED)
-
-
-# @decorators.api_view(["POST"])
-# @decorators.permission_classes([permissions.AllowAny])
-# def Do_Registration(request):
-#     first_name = request.data["first_name"]
-#     # print("Request = ", request.data)
-#     last_name = request.data["last_name"]
-#     user = User(first_name=first_name, last_name=last_name,
-#                 email=request.data["email"], password=request.data["password"])
-#     # post = Posts(post_title=request.data["post_title"],
-#     #              post_description=request.data['post_description'], comment=comment, tags=tags, user_details=user_details)
-#     # # post = Posts(user_details=user_details)
-#     # post = Posts(tags=tags, comment=comment, user_details=user_details)
-#     user.save()
-#     return Response("Inserted")
-
-
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def registration(request):
@@ -82,19 +50,6 @@ def registration(request):
     # else:
 
     return Response({"message": "System Error."}, status=status.HTTP_400_BAD_REQUEST)
-    # serializer = UserCreateSerializer(data=request.data)
-    # print(serializer.is_valid())
-    # if not serializer.is_valid():
-    #     print("in if")
-    #     return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-    # user = serializer.save()
-    # print(user)
-    # refresh = RefreshToken.for_user(user)
-    # res = {
-    #     "refresh": str(refresh),
-    #     "access": str(refresh.access_token),
-    # }
-    # return response.Response(res, status.HTTP_201_CREATED)
 
 
 @decorators.api_view(["POST"])
@@ -121,37 +76,3 @@ def login(request):
 
         # SEND RES
     return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-
-    # if not serializer.is_valid():
-    #     return response.Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
-    # user = serializer.save()
-    # print (user)
-    # refresh = RefreshToken.for_user(user)
-    # res = {
-    #     "refresh": str(refresh),
-    #     "access": str(refresh.access_token),
-    # }
-    # return response.Response(res, status.HTTP_201_CREATED)
-
-
-# class LoginView(GenericAPIView):
-#     serializer_class = LoginSerializer
-
-#     def post(self, request):
-#         data = request.data
-#         username = data.get('username', '')
-#         password = data.get('password', '')
-#         user = auth.authenticate(username=username, password=password)
-
-#         if user:
-#             auth_token = jwt.encode(
-#                 {'username': user.username}, settings.SECRET_KEY)
-#             # print(user)
-#             serializer = UserSerializer(user)
-
-#             data = {'user': serializer.data, 'token': auth_token}
-
-#             return Response(user, status=status.HTTP_200_OK)
-
-#             # SEND RES
-#         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)

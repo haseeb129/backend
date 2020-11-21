@@ -11,39 +11,41 @@ import numpy as np
 from .models import csvName
 
 
-@decorators.api_view(["POST"])
+@decorators.api_view(["GET"])
 @decorators.permission_classes([permissions.AllowAny])
 def upload(request):
-    print("request", request.data)
-    parser_class = (FileUploadParser,)
-    if 'file' not in request.data:  # if file not present
-        raise ParseError("Empty content")
-    f = request.data['file']
-    filename = request.data['name']
-    overwrite = request.data['overwrite']
-    oldname = request.data['oldname']
+    # print("request", request.data)
+    # parser_class = (FileUploadParser,)
+    # if 'file' not in request.data:  # if file not present
+    #     raise ParseError("Empty content")
+    # f = request.data['file']
+    # filename = request.data['name']
+    # overwrite = request.data['overwrite']
+    # oldname = request.data['oldname']\
+    f = "first1"
     pandafile = pd.read_csv(f, encoding="ISO-8859-1", error_bad_lines=False)
     pandafile = make(pandafile)
     df = pd.DataFrame(pandafile)
     # print("df", pandafile)
-    if(overwrite == 'true'):
-        obj = get_object_or_404(csvName, name=oldname)
-        obj.delete()
-        db = csvName(name=filename)
-        db.save()
-        df.to_csv(filename, index=False)
-    else:
-        db = csvName(name=filename)
-        db.save()
-        df.to_csv(filename, index=False)
-        pand = pd.read_csv(filename, encoding="ISO-8859-1",
-                           error_bad_lines=False)
+    # if(overwrite == 'true'):
+    #     obj = get_object_or_404(csvName, name=oldname)
+    #     obj.delete()
+    #     db = csvName(name=filename)
+    #     db.save()
+    #     df.to_csv(filename, index=False)
+    # else:
+    #     db = csvName(name=filename)
+    #     db.save()
+    #     df.to_csv(filename, index=False)
+    #     pand = pd.read_csv(filename, encoding="ISO-8859-1",
+    #                        error_bad_lines=False)
     return Response(pandafile)
 
 
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def read(request):
+    print(request.data)
     filename = request.data['name']
     csv = pd.read_csv(filename)
     # print(csv)
