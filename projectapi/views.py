@@ -7,12 +7,10 @@ from .serializers import projectapiSerializer
 import csv
 import io
 import json
+import os
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.views import APIView
-# import pandas as pd
-
-
 import numpy as np
 import pandas as pd
 import sklearn as sklearn
@@ -28,25 +26,11 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
-
 from rest_framework import response, decorators, permissions, status
 
-# def libraries():
-#     import numpy as np
-#     import pandas as pd
-#     import sklearn as sklearn
-#     from sklearn.feature_selection import SelectKBest
-#     from sklearn.feature_selection import chi2
-#     from sklearn import preprocessing
-#     from sklearn.model_selection import train_test_split
-#     from sklearn.metrics import accuracy_score
-#     from sklearn.metrics import classification_report
-#     from sklearn.metrics import confusion_matrix
-
-
 def readCsv():
-    data = pd.read_csv(
-        'E:\FYP\Defect-Prediction\projectapi/final_numeric_without_null.csv')
+    data = pd.read_csv(os.getcwd()+
+        '\\projectapi\\final_numeric_without_null.csv')
     X = data.drop(["Defect Density"], axis=1)
     y = data["Defect Density"]
     X = X.drop(["Total Defects Delivered"], axis=1)
@@ -76,10 +60,20 @@ def conversion_to_defects(data):
     defect_present = new['Defects Present']
     y = defect_present
     return y
-# def sortFeatures(features):
 
 
-# @api_view(['POST', ])
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def getFeaturesNames(request):
+    print("Request getFeaturesNames",request.data)
+    dataset=request.data['datasetName']
+    data, X= readCsv()
+
+    return Response(data.columns)
+
+
+
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgo(request):
@@ -125,11 +119,6 @@ def applyMLAlgo(request):
     matrix = confusion_matrix(y_test, prediction)
     report = classification_report(y_test, prediction, output_dict=True)
 
-    # array = []
-    # for i in report:
-    #     # report[i]["name"] = 1
-    #     array.append(report[i])
-
     a = {"result": result,
          "score": score,
          "matrix": matrix,
@@ -138,26 +127,6 @@ def applyMLAlgo(request):
          }
     return Response(a)
 
-
-@api_view(['PUT', ])
-def projectapi_fileview(request):
-
-    parser_class = (FileUploadParser,)
-    if 'file' not in request.data:
-        raise ParseError("Empty content")
-
-    f = request.data['file']
-    pandafile = pd.read_csv(f, encoding="ISO-8859-1")
-    print("pandafile", pandafile)
-    # data_set = f.read().decode("ISO-8859-1")
-    # io_string = io.StringIO(data_set)
-    # next(io_string)
-    # print("this is the file", f.path)
-    # mymodel.my_file_field.save(f.name, f, save=True)
-    return Response(pandafile)
-
-
-# @api_view(['POST', ])
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def projectapi_testing(request):
@@ -190,19 +159,6 @@ def projectapi_getFeatures(request):
     return Response(X)
 
 
-# @api_view(['POST', ])
-# def projectapi_fileview(request):
-
-#     parser_class = (FileUploadParser,)
-#     if 'file' not in request.data:
-#         raise ParseError("Empty content")
-
-#     f = request.data['file']
-#     print("this is the file", f)
-#     # mymodel.my_file_field.save(f.name, f, save=True)
-#     return Response(status=status.HTTP_201_CREATED)
-
-
 @api_view(['GET', ])
 def projectapi_view1(request):
     try:
@@ -213,19 +169,6 @@ def projectapi_view1(request):
         serializer = projectapiSerializer(data)
         return Response(serializer.data)
 
-
-@api_view(['POST', ])
-def IntermediateCOCOMO(request):
-    kloc = int(request.data['kloc'])
-    EAF = int(request.data['EAF'])
-
-    retdata = {
-        'effort': 596,
-        'devlopmentTime': 45,
-        'staffSize': 88,
-        'productivity': 77
-    }
-    return Response(retdata)
 
 
 @api_view(['POST', ])
