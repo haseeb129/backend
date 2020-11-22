@@ -36,4 +36,5 @@ urlpatterns = [
          include("projectapi.urls"), name="Defect_Prediction"),
     path('uploadfile/', include("UploadFile.urls")),
     path('comparison/', include("Comparison.urls")),
+    path('stats/', include("StatsUploadDataset.urls")),
 ]
