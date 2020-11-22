@@ -70,7 +70,13 @@ def getFeaturesNames(request):
     dataset=request.data['datasetName']
     data, X= readCsv()
 
-    return Response(data.columns)
+
+
+    # return Response(data.columns)
+    return Response({"columns":X.columns,"correlation":X.corr()})
+
+
+
 
 
 
