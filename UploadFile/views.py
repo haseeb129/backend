@@ -54,18 +54,6 @@ def columnDetails(request):
     column = request.data['column']
     dataColumn = pandafile[column]
     dic=dataColumnDetails(dataColumn)
-    # if(dataColumn.dtypes == object):
-    #     # print("Dealing with object")
-    #     # nullvales = (dataColumn == '').sum()
-    #     dic =objectColumnsDetails(dataColumn) 
-        
-    #     # {"Null Values": nullvales, "Not Null Values": dataColumn.notnull().sum(
-    #     #     axis=0)-nullvales, "type": "String/Object", "Unique Values": objetToDict(dataColumn.value_counts(dropna=False))}
-    # else:
-    #     dic =numaricColumnsDetails(dataColumn)
-    #     # print("Dealing with Number")
-    # # print("column,", dic)
-
     return Response(dic)
 
 
@@ -83,20 +71,6 @@ def dataColumnDetails(dataColumn):
                     "Null Values": nullvales,
                     "Not Null Values": dataColumn.notnull().sum(axis=0)-nullvales, "type": "INT-FLOAT"}
  
-        
-
-
-# def numaricColumnsDetails(dataColumn):
-#     nullvales = (dataColumn== 123456789).sum()
-#     return {"Min": dataColumn.min(),
-#                 "Max": dataColumn.max(),
-#                 "Mean": dataColumn.mean(axis=0),
-#                 "Mediam": dataColumn.median(axis=0),
-#                 "Standerd Deviation": dataColumn.std(axis=0),
-#                 "Null Values": nullvales,
-#                 "Not Null Values": dataColumn.notnull().sum(axis=0)-nullvales, "type": "INT-FLOAT"}
- 
-
 
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])

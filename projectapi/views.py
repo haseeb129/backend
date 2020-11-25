@@ -7,12 +7,10 @@ from .serializers import projectapiSerializer
 import csv
 import io
 import json
+import os
 from rest_framework.exceptions import ParseError
 from rest_framework.parsers import FileUploadParser
 from rest_framework.views import APIView
-# import pandas as pd
-
-
 import numpy as np
 import pandas as pd
 import sklearn as sklearn
@@ -26,31 +24,17 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
-
 from rest_framework import response, decorators, permissions, status
-
-# def libraries():
-#     import numpy as np
-#     import pandas as pd
-#     import sklearn as sklearn
-#     from sklearn.feature_selection import SelectKBest
-#     from sklearn.feature_selection import chi2
-#     from sklearn import preprocessing
-#     from sklearn.model_selection import train_test_split
-#     from sklearn.metrics import accuracy_score
-#     from sklearn.metrics import classification_report
-#     from sklearn.metrics import confusion_matrix
 
 
 def readCsv():
-    data = pd.read_csv(
-        'E:\FYP\Defect-Prediction\projectapi/final_numeric_without_null.csv')
-    X = data.drop(["Defect Density"], axis=1)
-    y = data["Defect Density"]
-    X = X.drop(["Total Defects Delivered"], axis=1)
-    return data, X
+    data = pd.read_csv(os.getcwd() +
+                       '\\projectapi\\Final_numaric_BinaryClassification.csv')
+    X = data.drop(data.columns[-1], axis=1)
+    y = data[data.columns[-1]]
+    # X = X.drop(["Total Defects Delivered"], axis=1)
+    return data, X, y
 
 
 def conversion_to_defects(data):
@@ -76,18 +60,28 @@ def conversion_to_defects(data):
     defect_present = new['Defects Present']
     y = defect_present
     return y
-# def sortFeatures(features):
 
 
-# @api_view(['POST', ])
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def getFeaturesNames(request):
+    print("Request getFeaturesNames", request.data)
+    dataset = request.data['datasetName']
+    data, X = readCsv()
+
+    # return Response(data.columns)
+    return Response({"columns": X.columns, "correlation": X.corr()})
+
+
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgo(request):
 
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
-    data, X = readCsv()
-    y = conversion_to_defects(data)
+    data, X, y = readCsv()
+    # print(y)
+    # y = conversion_to_defects(data)
     sortedArray = sorted(features.items())
     featuresNames = []
     featuresValues = []
@@ -96,39 +90,54 @@ def applyMLAlgo(request):
         featuresNames.append(i[0])
         featuresValues.append(i[1])
     X = data[featuresNames]
-
+    # print(y)
+    # print(X)
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'decisiontree'):
+    if(mlAlgo == 'Decision Tree Classifier'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
-    elif(mlAlgo == 'logesticregression'):
+    elif(mlAlgo == 'Logestic Regression'):
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression()
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
         from sklearn.neighbors import KNeighborsClassifier
         model = KNeighborsClassifier()
-    elif(mlAlgo == 'LinearDiscriminantAnalysis'):
+    elif(mlAlgo == 'Linear Discriminant Analysis'):
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
         print("LinearDiscriminantAnalysis")
         model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'GaussianNB'):
+    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
         from sklearn.naive_bayes import GaussianNB
         model = GaussianNB()
-    elif(mlAlgo == 'svc'):
+    elif(mlAlgo == 'Support Vector Machine (SVM)'):
         from sklearn.svm import SVC
         model = SVC()
+    elif (mlAlgo == 'Linear Regression'):
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    elif (mlAlgo == 'Extra Trees Classifier'):
+        from sklearn.ensemble import ExtraTreesClassifier
+        model = ExtraTreesClassifier(n_estimators=300)
+    elif (mlAlgo == 'Random Forest Classifier'):
+        from sklearn.ensemble import RandomForestClassifier
+        model = RandomForestClassifier(n_estimators=300)
+    elif (mlAlgo == 'Ada Boost Classifier'):
+        from sklearn.ensemble import AdaBoostClassifier
+        model = AdaBoostClassifier(n_estimators=500)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
     print("After 1")
-    score = accuracy_score(y_test, prediction)
-    print(score)
-    print("After 2")
-    result = model.predict([featuresValues])
-    print("After 3")
+    # print("Prediction : ",prediction)
+    # print(y_test)
+    score = accuracy_score(y_test, prediction.round())
+    print("Score: ", score)
+    # print("After 2")
+    result = model.predict([[float(i) for i in featuresValues]])
+    # print("After 3")
     print("Result", result)
-    matrix = confusion_matrix(y_test, prediction)
-    report = classification_report(y_test, prediction, output_dict=True)
-
-    # array = []
-    # for i in report:
-    #     # report[i]["name"] = 1
-    #     array.append(report[i])
+    matrix = confusion_matrix(y_test, prediction.round())
+    report = classification_report(
+        y_test, prediction.round(), output_dict=True)
 
     a = {"result": result,
          "score": score,
@@ -139,25 +148,6 @@ def applyMLAlgo(request):
     return Response(a)
 
 
-@api_view(['PUT', ])
-def projectapi_fileview(request):
-
-    parser_class = (FileUploadParser,)
-    if 'file' not in request.data:
-        raise ParseError("Empty content")
-
-    f = request.data['file']
-    pandafile = pd.read_csv(f, encoding="ISO-8859-1")
-    print("pandafile", pandafile)
-    # data_set = f.read().decode("ISO-8859-1")
-    # io_string = io.StringIO(data_set)
-    # next(io_string)
-    # print("this is the file", f.path)
-    # mymodel.my_file_field.save(f.name, f, save=True)
-    return Response(pandafile)
-
-
-# @api_view(['POST', ])
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def projectapi_testing(request):
@@ -175,32 +165,19 @@ def projectapi_getFeatures(request):
     method = request.data["method"]
     print(request.data)
     print(method)
-    if(method == 'kbest'):
+    if(method == 'Filter Method (Kbest)'):
         X = ['Normalised Work Effort', 'Summary Work Effort', 'Normalised Work Effort Level 1', 'Effort Unphased',
              'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count', 'Speed of Delivery', 'Normalised Level 1 PDR (ufp)']
 
-    elif(method == 'recursive'):
+    elif(method == 'Wrapper Method (Recursive)'):
         X = ['Year of Project', 'Max Team Size', 'Project Elapsed Time', 'Language_Type_4GL', 'Development_Platform_MR',
              'Value Adjustment Factor', 'Normalised Work Effort', 'Adjusted Function Points', 'Functional Size', 'Input count']
 
-    elif (method == 'filter'):
+    elif (method == 'Embedded Method (Ridge)'):
         X = ['Normalised Level 1 PDR (ufp)', 'Year of Project', 'Normalised Work Effort', 'Summary Work Effort',
              'Normalised Work Effort Level 1', 'Effort Unphased', 'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count']
 
     return Response(X)
-
-
-# @api_view(['POST', ])
-# def projectapi_fileview(request):
-
-#     parser_class = (FileUploadParser,)
-#     if 'file' not in request.data:
-#         raise ParseError("Empty content")
-
-#     f = request.data['file']
-#     print("this is the file", f)
-#     # mymodel.my_file_field.save(f.name, f, save=True)
-#     return Response(status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET', ])
@@ -212,20 +189,6 @@ def projectapi_view1(request):
     if request.method == "GET":
         serializer = projectapiSerializer(data)
         return Response(serializer.data)
-
-
-@api_view(['POST', ])
-def IntermediateCOCOMO(request):
-    kloc = int(request.data['kloc'])
-    EAF = int(request.data['EAF'])
-
-    retdata = {
-        'effort': 596,
-        'devlopmentTime': 45,
-        'staffSize': 88,
-        'productivity': 77
-    }
-    return Response(retdata)
 
 
 @api_view(['POST', ])
@@ -266,3 +229,115 @@ def projectapi_view2(request):
 
             return Response(classification, status=status.HTTP_201_CREATED)
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+def projectapi_getFeatures1(method):
+    # method = request.data["method"]
+    # print(request.data)
+    print(method)
+    if(method == 'kbest'):
+        X = ['Normalised Work Effort', 'Summary Work Effort', 'Normalised Work Effort Level 1', 'Effort Unphased',
+             'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count', 'Speed of Delivery', 'Normalised Level 1 PDR (ufp)']
+
+    elif(method == 'recursive'):
+        X = ['Year of Project', 'Max Team Size', 'Project Elapsed Time', 'Language_Type_4GL', 'Development_Platform_MR',
+             'Value Adjustment Factor', 'Normalised Work Effort', 'Adjusted Function Points', 'Functional Size', 'Input count']
+
+    elif (method == 'filter'):
+        X = ['Normalised Level 1 PDR (ufp)', 'Year of Project', 'Normalised Work Effort', 'Summary Work Effort',
+             'Normalised Work Effort Level 1', 'Effort Unphased', 'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count']
+
+    return X
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def applyBaggingAlgo(request):
+    model = request.data['model']
+    numberOfEstimators = request.data['estimators']
+    data, X = readCsv()
+    method = "kbest"
+    X = projectapi_getFeatures1(method)
+    X = data[X]
+    y = conversion_to_defects(data)
+    # min_max_scaler = preprocessing.MinMaxScaler()
+    # X_train_minmax = min_max_scaler.fit_transform(X)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3)
+    from sklearn.neighbors import KNeighborsClassifier
+    from sklearn.tree import DecisionTreeClassifier
+    from sklearn.svm import SVC
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.ensemble import BaggingClassifier
+    from sklearn import model_selection
+    if model == 'kneighbours':
+        model1 = KNeighborsClassifier()
+    elif model == 'decisiontree':
+        model1 = DecisionTreeClassifier()
+    elif model == 'svc':
+        model1 = SVC()
+    elif model == 'logestic':
+        model1 = LogisticRegression()
+    elif model == 'gaussian':
+        model1 = GaussianNB()
+    seed = 8
+    kfold = model_selection.KFold(n_splits=3,
+                                  random_state=int(numberOfEstimators))
+    # initialize the base classifier
+    base_cls = model1
+    # no. of base classifier
+    # num_trees = 500
+    # bagging classifier
+    model = BaggingClassifier(base_estimator=base_cls,
+                              n_estimators=1000)
+    results = model_selection.cross_val_score(model, X, y, cv=kfold)
+    print("accuracy :")
+    print(results.mean())
+    return Response(results.mean())
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def applyVotingAlgo(request):
+
+    model = VotingClassifier(
+        estimators=[('lr', model1), ('dt', model2), ("svc", model3)], voting='hard')
+    model.fit(X_train, y_train)
+    model.score(X_test, y_test)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def applyBoostingAlgo(request):
+    model = request.data['ensemblingMethod']
+    numberOfEstimators = request.data['estimators']
+    data, X = readCsv()
+    method = "kbest"
+    X = projectapi_getFeatures1(method)
+    X = data[X]
+    y = conversion_to_defects(data)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3)
+    if model == 'gradient':
+        from sklearn.ensemble import GradientBoostingClassifier
+        clf = GradientBoostingClassifier(n_estimators=numberOfEstimators)
+        clf.fit(X_train, y_train)
+        clf.predict(X_test)
+        a = clf.score(X_test, y_test)
+        print(a)
+    elif model == 'extratree':
+        from sklearn.ensemble import ExtraTreesClassifier
+        model = ExtraTreesClassifier(n_estimators=numberOfEstimators)
+        model.fit(X_train, y_train)
+        a = model.score(X_test, y_test)
+    elif model == 'randomforest':
+        from sklearn.ensemble import RandomForestClassifier
+        model = RandomForestClassifier(n_estimators=numberOfEstimators)
+        model.fit(X_train, y_train)
+        a = model.score(X_test, y_test)
+    elif model == 'adaboost':
+        from sklearn.ensemble import AdaBoostClassifier
+        model = AdaBoostClassifier(n_estimators=500)
+        model.fit(X_train, y_train)
+        a = model.score(X_test, y_test)
+    return Response(a)

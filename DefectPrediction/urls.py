@@ -37,4 +37,5 @@ urlpatterns = [
     path('uploadfile/', include("UploadFile.urls")),
     path('comparison/', include("Comparison.urls")),
     path('stats/', include("StatsUploadDataset.urls")),
+    path('ppa/', include("PostPredictionAnalysis.urls")),
 ]

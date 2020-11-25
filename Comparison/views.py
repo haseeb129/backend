@@ -66,7 +66,10 @@ def conversion_to_defects(data):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def getFeaturesNames(request):
+    print("Request getFeaturesNames", request.data)
+    dataset = request.data['datasetName']
     data, X, y = readCsv()
+
     return Response(data.columns)
 
 
@@ -84,6 +87,26 @@ def getTwoMLAlgoNames(request):
         request.data["m2"],
         request.data["features"],
         # request.data["targetClass"],
+    )
+    a = {"ML1": ml1, "ML2": ml2}
+    return Response(a)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def inputValueComparisonML(request):
+    print("inputValueComparisonML", request.data)
+
+    print("PAth.      :", os.getcwd())
+    ml1 = applyMLAlgo(
+
+        request.data["MLAlgorithm1"],
+        request.data["inputFields"],
+    )
+    ml2 = applyMLAlgo(
+
+        request.data["MLAlgorithm2"],
+        request.data["inputFields"],
     )
     a = {"ML1": ml1, "ML2": ml2}
     return Response(a)
@@ -144,11 +167,8 @@ def applyMLAlgoWithoutInputValues(mlAlgo, features):
 
 def applyMLAlgo(mlAlgo, features):
 
-    # features = request.data['features']
-    # mlAlgo = request.data['mlAlgo']
     data, X, y = readCsv()
-    # y = conversion_to_defects(data)
-    features = data[features]
+    y = conversion_to_defects(data)
     sortedArray = sorted(features.items())
     featuresNames = []
     featuresValues = []
@@ -185,6 +205,12 @@ def applyMLAlgo(mlAlgo, features):
     print("Result", result)
     matrix = confusion_matrix(y_test, prediction)
     report = classification_report(y_test, prediction, output_dict=True)
+
+    # array = []
+    # for i in report:
+    #     # report[i]["name"] = 1
+    #     array.append(report[i])
+
     a = {"result": result,
          "score": score,
          "matrix": matrix,
