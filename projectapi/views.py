@@ -69,9 +69,6 @@ def getFeaturesNames(request):
     print("Request getFeaturesNames",request.data)
     dataset=request.data['datasetName']
     data, X= readCsv()
-
-
-
     # return Response(data.columns)
     return Response({"columns":X.columns,"correlation":X.corr()})
 
@@ -144,6 +141,7 @@ def projectapi_testing(request):
 
 
 # @api_view(['POST', ])
+
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def projectapi_getFeatures(request):
