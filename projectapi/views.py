@@ -28,9 +28,20 @@ from sklearn.naive_bayes import GaussianNB
 from rest_framework import response, decorators, permissions, status
 
 
-def readCsv():
-    data = pd.read_csv(os.getcwd() +
-                       '\\projectapi\\Final_numaric_BinaryClassification.csv')
+def readCsv(datasetName):
+    print("Dataset Name", datasetName)
+    if datasetName == "ISBSG":
+        data = pd.read_csv(os.getcwd() +
+                           '\\csv\\Final_numaric_BinaryClassification.csv')
+    elif datasetName.__contains__("promise"):
+        csv = datasetName.split(" ")
+        print(type(csv[1]))
+        print(type(os.getcwdb()))
+        a = str(os.getcwdb())+str('\\csv\\'+csv[1]+'.csv')
+        a = a.replace("'", "")
+        a = a.replace("b", "")
+        print("Full : ", a)
+        data = pd.read_csv(a)
     X = data.drop(data.columns[-1], axis=1)
     y = data[data.columns[-1]]
     # X = X.drop(["Total Defects Delivered"], axis=1)
@@ -76,10 +87,10 @@ def getFeaturesNames(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgo(request):
-
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
-    data, X, y = readCsv()
+    datasetFile = request.data["csvFile"]
+    data, X, y = readCsv(datasetFile)
     # print(y)
     # y = conversion_to_defects(data)
     sortedArray = sorted(features.items())
