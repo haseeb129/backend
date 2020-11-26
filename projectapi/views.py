@@ -115,7 +115,10 @@ def applyMLAlgo(request):
         model = KNeighborsClassifier()
     elif(mlAlgo == 'Linear Discriminant Analysis'):
         from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+<<<<<<< HEAD
         # print("LinearDiscriminantAnalysis")
+=======
+>>>>>>> 1ebaaac64499b4109268611897f9fe9830d1076f
         model = LinearDiscriminantAnalysis()
     elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
         from sklearn.naive_bayes import GaussianNB
@@ -145,7 +148,7 @@ def applyMLAlgo(request):
     # print("After 2")
     result = model.predict([[float(i) for i in featuresValues]])
     # print("After 3")
-    print("Result", result)
+    print("Result", result[0])
     matrix = confusion_matrix(y_test, prediction.round())
     report = classification_report(
         y_test, prediction.round(), output_dict=True)
@@ -170,6 +173,7 @@ def projectapi_testing(request):
 
 
 # @api_view(['POST', ])
+
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def projectapi_getFeatures(request):

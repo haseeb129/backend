@@ -11,7 +11,7 @@ import numpy as np
 from .models import csvName
 
 
-@decorators.api_view(["GET"])
+@decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def upload(request):
     print("request", request.data)
