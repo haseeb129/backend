@@ -228,14 +228,15 @@ def applyMLAlgo(mlAlgo, features):
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
     # print("After 1")
-    score = accuracy_score(y_test, prediction)
+    score = accuracy_score(y_test, prediction.round())
     print("Score : ", score)
     # print("After 2")
-    result = model.predict([featuresValues])
+    result = model.predict([[float(i) for i in featuresValues]])
     # print("After 3")
     print("Result : ", result)
-    matrix = confusion_matrix(y_test, prediction)
-    report = classification_report(y_test, prediction, output_dict=True)
+    matrix = confusion_matrix(y_test, prediction.round())
+    report = classification_report(
+        y_test, prediction.round(), output_dict=True)
 
     a = {"result": result,
          "score": score,
