@@ -115,10 +115,6 @@ def applyMLAlgo(request):
         model = KNeighborsClassifier()
     elif(mlAlgo == 'Linear Discriminant Analysis'):
         from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-<<<<<<< HEAD
-        # print("LinearDiscriminantAnalysis")
-=======
->>>>>>> 1ebaaac64499b4109268611897f9fe9830d1076f
         model = LinearDiscriminantAnalysis()
     elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
         from sklearn.naive_bayes import GaussianNB

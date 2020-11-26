@@ -58,7 +58,7 @@ def columnDetails(request):
 
 
 def dataColumnDetails(dataColumn):
-    if(dataColumn.dtypes == object):
+    if(dataColumn.dtypes == object or dataColumn.dtypes == bool):
         nullvales = (dataColumn == 'Null').sum()
         return {"Null Values": nullvales, "Not Null Values": dataColumn.notnull().sum(axis=0)-nullvales, "type": "String/Object", "Unique Values": objetToDict(dataColumn.value_counts(dropna=False))}
     else:
