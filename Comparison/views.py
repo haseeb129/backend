@@ -130,21 +130,37 @@ def applyMLAlgoWithoutInputValues(mlAlgo, features):
         featuresValues.append(i[1])
     X = data[featuresNames]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'decisiontree'):
+    if(mlAlgo == 'Decision Tree Classifier'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
-    elif(mlAlgo == 'logesticregression'):
+    elif(mlAlgo == 'Logestic Regression'):
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression()
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
         from sklearn.neighbors import KNeighborsClassifier
         model = KNeighborsClassifier()
-    elif(mlAlgo == 'LinearDiscriminantAnalysis'):
-        print("LinearDiscriminantAnalysis")
+    elif(mlAlgo == 'Linear Discriminant Analysis'):
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+        # print("LinearDiscriminantAnalysis")
         model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'GaussianNB'):
+    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
         from sklearn.naive_bayes import GaussianNB
         model = GaussianNB()
-    elif(mlAlgo == 'svc'):
+    elif(mlAlgo == 'Support Vector Machine (SVM)'):
         from sklearn.svm import SVC
         model = SVC()
+    elif (mlAlgo == 'Linear Regression'):
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    elif (mlAlgo == 'Extra Trees Classifier'):
+        from sklearn.ensemble import ExtraTreesClassifier
+        model = ExtraTreesClassifier(n_estimators=300)
+    elif (mlAlgo == 'Random Forest Classifier'):
+        from sklearn.ensemble import RandomForestClassifier
+        model = RandomForestClassifier(n_estimators=300)
+    elif (mlAlgo == 'Ada Boost Classifier'):
+        from sklearn.ensemble import AdaBoostClassifier
+        model = AdaBoostClassifier(n_estimators=500)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
     print("After 1")
@@ -179,37 +195,47 @@ def applyMLAlgo(mlAlgo, features):
     X = data[featuresNames]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'decisiontree'):
+    if(mlAlgo == 'Decision Tree Classifier'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
-    elif(mlAlgo == 'logesticregression'):
+    elif(mlAlgo == 'Logestic Regression'):
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression()
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
         from sklearn.neighbors import KNeighborsClassifier
         model = KNeighborsClassifier()
-    elif(mlAlgo == 'LinearDiscriminantAnalysis'):
-        print("LinearDiscriminantAnalysis")
+    elif(mlAlgo == 'Linear Discriminant Analysis'):
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
         model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'GaussianNB'):
+    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
         from sklearn.naive_bayes import GaussianNB
         model = GaussianNB()
-    elif(mlAlgo == 'svc'):
+    elif(mlAlgo == 'Support Vector Machine (SVM)'):
         from sklearn.svm import SVC
         model = SVC()
+    elif (mlAlgo == 'Linear Regression'):
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    elif (mlAlgo == 'Extra Trees Classifier'):
+        from sklearn.ensemble import ExtraTreesClassifier
+        model = ExtraTreesClassifier(n_estimators=300)
+    elif (mlAlgo == 'Random Forest Classifier'):
+        from sklearn.ensemble import RandomForestClassifier
+        model = RandomForestClassifier(n_estimators=300)
+    elif (mlAlgo == 'Ada Boost Classifier'):
+        from sklearn.ensemble import AdaBoostClassifier
+        model = AdaBoostClassifier(n_estimators=500)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
-    print("After 1")
+    # print("After 1")
     score = accuracy_score(y_test, prediction)
-    print(score)
-    print("After 2")
+    print("Score : ", score)
+    # print("After 2")
     result = model.predict([featuresValues])
-    print("After 3")
-    print("Result", result)
+    # print("After 3")
+    print("Result : ", result)
     matrix = confusion_matrix(y_test, prediction)
     report = classification_report(y_test, prediction, output_dict=True)
-
-    # array = []
-    # for i in report:
-    #     # report[i]["name"] = 1
-    #     array.append(report[i])
 
     a = {"result": result,
          "score": score,
@@ -284,7 +310,7 @@ def returnFeatuesList(numberOfFeatures, method, method1):
             return featureList
         else:
             pass
-    elif method == 'embedded':
+    elif method == 'Embedded Method (Ridge)':
         featureList = embedded(numberOfFeatures, X, y)
         return featureList
     else:

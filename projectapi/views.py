@@ -77,8 +77,8 @@ def conversion_to_defects(data):
 @decorators.permission_classes([permissions.AllowAny])
 def getFeaturesNames(request):
     print("Request getFeaturesNames", request.data)
-    dataset = request.data['datasetName']
-    data, X = readCsv()
+    dataset = request.data['csvFile']
+    data, X, y = readCsv(dataset)
 
     # return Response(data.columns)
     return Response({"columns": X.columns, "correlation": X.corr()})
@@ -115,7 +115,7 @@ def applyMLAlgo(request):
         model = KNeighborsClassifier()
     elif(mlAlgo == 'Linear Discriminant Analysis'):
         from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        print("LinearDiscriminantAnalysis")
+        # print("LinearDiscriminantAnalysis")
         model = LinearDiscriminantAnalysis()
     elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
         from sklearn.naive_bayes import GaussianNB
