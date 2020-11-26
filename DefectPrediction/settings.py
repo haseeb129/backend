@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     # 'FileUpload',
     'UploadFile',
     'Comparison',
+    'StatsUploadDataset',
     # 'jwtauth'
 ]
 

@@ -29,7 +29,7 @@ from rest_framework import response, decorators, permissions, status
 
 def readCsv():
     data = pd.read_csv(
-        os.getcwd()+'\\Comparison\\encoded_format.csv', decimal=',')
+        os.getcwd()+'\\Comparison\\final_numeric_without_null.csv', decimal=',')
     X = data.drop(["Defect Density"], axis=1)
     y = data["Defect Density"]
     # X = X.drop(["Total Defects Delivered"], axis=1)
@@ -56,6 +56,7 @@ def conversion_to_defects(data):
             return 0
     a = data["Defect Density"].apply(checkDefects)
     new = pd.get_dummies(a)
+    print(new)
     new["Defects Present"] = new["Defects Present"].apply(invertValues)
     defect_present = new['Defects Present']
     y = defect_present
@@ -65,8 +66,8 @@ def conversion_to_defects(data):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def getFeaturesNames(request):
-    print("Request getFeaturesNames",request.data)
-    dataset=request.data['datasetName']
+    print("Request getFeaturesNames", request.data)
+    dataset = request.data['datasetName']
     data, X, y = readCsv()
 
     return Response(data.columns)
@@ -80,10 +81,12 @@ def getTwoMLAlgoNames(request):
     ml1 = applyMLAlgoWithoutInputValues(
         request.data["m1"],
         request.data["features"],
+        # request.data["targetClass"],
     )
     ml2 = applyMLAlgoWithoutInputValues(
         request.data["m2"],
         request.data["features"],
+        # request.data["targetClass"],
     )
     a = {"ML1": ml1, "ML2": ml2}
     return Response(a)
@@ -92,16 +95,16 @@ def getTwoMLAlgoNames(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def inputValueComparisonML(request):
-    print("inputValueComparisonML",request.data)
+    print("inputValueComparisonML", request.data)
 
     print("PAth.      :", os.getcwd())
     ml1 = applyMLAlgo(
-        
+
         request.data["MLAlgorithm1"],
         request.data["inputFields"],
     )
     ml2 = applyMLAlgo(
-        
+
         request.data["MLAlgorithm2"],
         request.data["inputFields"],
     )
@@ -109,14 +112,14 @@ def inputValueComparisonML(request):
     return Response(a)
 
 
-
-
 def applyMLAlgoWithoutInputValues(mlAlgo, features):
 
     # features = request.data['features']
     # mlAlgo = request.data['mlAlgo']
     data, X, y = readCsv()
+    # y = data[target]
     y = conversion_to_defects(data)
+    # print(y)
     features = data[features]
     sortedArray = sorted(features.items())
     featuresNames = []
@@ -155,7 +158,7 @@ def applyMLAlgoWithoutInputValues(mlAlgo, features):
     report = classification_report(y_test, prediction, output_dict=True)
     a = {
         "score": score,
-        "matrix": matrix,
+        # "matrix": matrix,
         "report": report
 
     }
@@ -164,7 +167,7 @@ def applyMLAlgoWithoutInputValues(mlAlgo, features):
 
 def applyMLAlgo(mlAlgo, features):
 
-    data, X,y = readCsv()
+    data, X, y = readCsv()
     y = conversion_to_defects(data)
     sortedArray = sorted(features.items())
     featuresNames = []
@@ -226,11 +229,13 @@ def getTwoFeaturesNames(request):
         request.data["a1"],
         request.data["a2"],
         request.data['featuresCount'],
+        # request.data['targetClass'],
     )
     features2 = dmFeatureComparison(
         request.data["b1"],
         request.data["b2"],
         request.data['featuresCount'],
+        # request.data['targetClass'],
     )
     a = {"First": features1, "Second": features2}
     return Response(a)
@@ -248,7 +253,8 @@ def dmFeatureComparison(method1, method2, featuresCount):
     a = returnFeatuesList(
         featuresCount,
         method1,
-        method2
+        method2,
+        # target
         # X, y
         # request.data['X'],
         # request.data['y'],
@@ -261,6 +267,7 @@ def dmFeatureComparison(method1, method2, featuresCount):
 def returnFeatuesList(numberOfFeatures, method, method1):
     # print(numberOfFeatures, method, method1, X, y)
     data, X, y = readCsv()
+    # y = data[target]
     encoded = conversion_to_defects(data)
     if(method == 'filter'):
         featureList = kbest(numberOfFeatures, X, encoded)
