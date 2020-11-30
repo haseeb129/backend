@@ -91,7 +91,7 @@ def conversion_to_defects(data):
 def getFeaturesNames(request):
     print("Request getFeaturesNames", request.data)
     dataset = request.data['datasetName']
-    data, X,y = readCsv(dataset)
+    data, X, y = readCsv(dataset)
 
     # return Response(data.columns)
     return Response({"columns": X.columns, "correlation": X.corr()})
@@ -122,12 +122,8 @@ def applyMLAlgo(request):
     X = data[featuresNames]
     # print(y)
     # print(X)
-<<<<<<< HEAD
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=42)
-=======
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3,random_state=40)
->>>>>>> d7dc4a951d55f6483e93fb596fc1156772a1ca4a
+        X, y, test_size=0.3, random_state=40)
     if(mlAlgo == 'Decision Tree Classifier'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
