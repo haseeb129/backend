@@ -241,11 +241,11 @@ def projectapi_getFeatures(request):
              'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count', 'Speed of Delivery', 'Normalised Level 1 PDR (ufp)']
 
     elif(method == 'Wrapper Method (Recursive)'):
-        X = ['Year of Project', 'Max Team Size', 'Project Elapsed Time', 'Language_Type_4GL', 'Development_Platform_MR',
+        X = ['Max Team Size', 'Project Elapsed Time', 'Language_Type_4GL', 'Development_Platform_MR',
              'Value Adjustment Factor', 'Normalised Work Effort', 'Adjusted Function Points', 'Functional Size', 'Input count']
 
     elif (method == 'Embedded Method (Ridge)'):
-        X = ['Normalised Level 1 PDR (ufp)', 'Year of Project', 'Normalised Work Effort', 'Summary Work Effort',
+        X = ['Normalised Level 1 PDR (ufp)', 'Normalised Work Effort', 'Summary Work Effort',
              'Normalised Work Effort Level 1', 'Effort Unphased', 'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count']
 
     return Response(X)
