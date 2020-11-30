@@ -61,13 +61,30 @@ def convertToTernaryClassification(data):
     return a
 
 
+def convertToPentaClassification(data):
+    def checkDefects(col):
+        if col != 0:
+            if col <= 20:
+                return "low"
+            elif col > 20 and col <= 60:
+                return "medium"
+            elif col > 60 and col <= 90:
+                return "high"
+            else:
+                return "very high"
+        else:
+            return 'Zero'
+    a = data[data.columns[-1]].apply(checkDefects)
+    return a
+
+
 def conversion_to_defects(data):
     def checkDefects(col):
         if col != 0:
             if col <= 10:
                 return "low"
             elif col > 10 and col <= 15:
-                return "mediam"
+                return "medium"
             else:
                 return "high"
         else:
@@ -165,7 +182,24 @@ def applyMLAlgo(request):
         matrix = confusion_matrix(y_test, prediction.round())
         report = classification_report(
             y_test, prediction.round(), output_dict=True)
+        if(result[0] == 0):
+            res = "No Defects Detected"
+        else:
+            res = "Defects Detected"
+        a = {
+            "result": res,
+            "score": score,
+            "matrix": matrix,
+            "report": report
+
+        }
+        return Response(a)
     elif (classification == "ternary"):
+        score = accuracy_score(y_test, prediction)
+        matrix = confusion_matrix(y_test, prediction)
+        report = classification_report(
+            y_test, prediction, output_dict=True)
+    elif (classification == "penta"):
         score = accuracy_score(y_test, prediction)
         matrix = confusion_matrix(y_test, prediction)
         report = classification_report(
