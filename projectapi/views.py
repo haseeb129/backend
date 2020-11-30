@@ -32,20 +32,33 @@ def readCsv(datasetName):
     print("Dataset Name", datasetName)
     if datasetName == "ISBSG":
         data = pd.read_csv(os.getcwd() +
-                           '\\csv\\Final_numaric_BinaryClassification.csv')
+                           '\\csv\\fully_final.csv')
     elif datasetName.__contains__("promise"):
         csv = datasetName.split(" ")
-        print(type(csv[1]))
-        print(type(os.getcwdb()))
-        a = str(os.getcwdb())+str('\\csv\\'+csv[1]+'.csv')
-        a = a.replace("'", "")
-        a = a.replace("b", "")
-        print("Full : ", a)
-        data = pd.read_csv(a)
+        # print(type(csv[1]))
+        # print(type(os.getcwdb()))
+        # a = str(os.getcwdb())+str('\\csv\\'+csv[1]+'.csv')
+        # a = a.replace("'", "")
+        # a = a.replace("b", "")
+        # print("Full : ", a)
+        # data = pd.read_csv(a)
     X = data.drop(data.columns[-1], axis=1)
     y = data[data.columns[-1]]
     # X = X.drop(["Total Defects Delivered"], axis=1)
     return data, X, y
+
+
+def convertToTernaryClassification(data):
+    def checkDefects(col):
+        if col != 0:
+            if col <= 20:
+                return "low"
+            else:
+                return "high"
+        else:
+            return 'Zero'
+    a = data[data.columns[-1]].apply(checkDefects)
+    return a
 
 
 def conversion_to_defects(data):
@@ -65,7 +78,7 @@ def conversion_to_defects(data):
             return 1
         else:
             return 0
-    a = data["Defect Density"].apply(checkDefects)
+    a = data[data.columns[-1]].apply(checkDefects)
     new = pd.get_dummies(a)
     new["Defects Present"] = new["Defects Present"].apply(invertValues)
     defect_present = new['Defects Present']
@@ -90,9 +103,15 @@ def applyMLAlgo(request):
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
+    classification = request.data['classificationType']
     data, X, y = readCsv(datasetFile)
-    # print(y)
-    # y = conversion_to_defects(data)
+    if(classification == "binary"):
+        y = conversion_to_defects(data)
+    elif (classification == "ternary"):
+        y = convertToTernaryClassification(data)
+        print(y)
+    elif (classification == "penta"):
+        y = convertToPentaClassification(data)
     sortedArray = sorted(features.items())
     featuresNames = []
     featuresValues = []
@@ -103,7 +122,8 @@ def applyMLAlgo(request):
     X = data[featuresNames]
     # print(y)
     # print(X)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42)
     if(mlAlgo == 'Decision Tree Classifier'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
@@ -139,15 +159,21 @@ def applyMLAlgo(request):
     print("After 1")
     # print("Prediction : ",prediction)
     # print(y_test)
-    score = accuracy_score(y_test, prediction.round())
+    result = model.predict([[float(i) for i in featuresValues]])
+    if(classification == "binary"):
+        score = accuracy_score(y_test, prediction.round())
+        matrix = confusion_matrix(y_test, prediction.round())
+        report = classification_report(
+            y_test, prediction.round(), output_dict=True)
+    elif (classification == "ternary"):
+        score = accuracy_score(y_test, prediction)
+        matrix = confusion_matrix(y_test, prediction)
+        report = classification_report(
+            y_test, prediction, output_dict=True)
     print("Score: ", score)
     # print("After 2")
-    result = model.predict([[float(i) for i in featuresValues]])
     # print("After 3")
     print("Result", result[0])
-    matrix = confusion_matrix(y_test, prediction.round())
-    report = classification_report(
-        y_test, prediction.round(), output_dict=True)
 
     a = {"result": result,
          "score": score,
