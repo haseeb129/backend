@@ -122,12 +122,12 @@ def applyMLAlgo(request):
     datasetFile = request.data["csvFile"]
     classification = request.data['classificationType']
     data, X, y = readCsv(datasetFile)
-    if(classification == "binary"):
+    if(classification == "Binary"):
         y = conversion_to_defects(data)
-    elif (classification == "ternary"):
+    elif (classification == "Ternary"):
         y = convertToTernaryClassification(data)
         print(y)
-    elif (classification == "penta"):
+    elif (classification == "Penta"):
         y = convertToPentaClassification(data)
     sortedArray = sorted(features.items())
     featuresNames = []
@@ -177,7 +177,7 @@ def applyMLAlgo(request):
     # print("Prediction : ",prediction)
     # print(y_test)
     result = model.predict([[float(i) for i in featuresValues]])
-    if(classification == "binary"):
+    if(classification == "Binary"):
         score = accuracy_score(y_test, prediction.round())
         matrix = confusion_matrix(y_test, prediction.round())
         report = classification_report(
@@ -194,12 +194,12 @@ def applyMLAlgo(request):
 
         }
         return Response(a)
-    elif (classification == "ternary"):
+    elif (classification == "Ternary"):
         score = accuracy_score(y_test, prediction)
         matrix = confusion_matrix(y_test, prediction)
         report = classification_report(
             y_test, prediction, output_dict=True)
-    elif (classification == "penta"):
+    elif (classification == "Penta"):
         score = accuracy_score(y_test, prediction)
         matrix = confusion_matrix(y_test, prediction)
         report = classification_report(
@@ -220,18 +220,6 @@ def applyMLAlgo(request):
 
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
-def projectapi_testing(request):
-    method = request.data["method"]
-    print(request.data)
-    print(method)
-
-    return Response(request.data["array"])
-
-
-# @api_view(['POST', ])
-
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
 def projectapi_getFeatures(request):
     method = request.data["method"]
     print(request.data)
@@ -249,57 +237,6 @@ def projectapi_getFeatures(request):
              'Normalised Work Effort Level 1', 'Effort Unphased', 'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count']
 
     return Response(X)
-
-
-@api_view(['GET', ])
-def projectapi_view1(request):
-    try:
-        data = projectapi.objects.get()
-    except projectapi.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    if request.method == "GET":
-        serializer = projectapiSerializer(data)
-        return Response(serializer.data)
-
-
-@api_view(['POST', ])
-def projectapi_view2(request):
-    print("Normalized_Work_Effort",
-          request.data["Normalized_Work_Effort"])
-    try:
-        data = projectapi.objects.get()
-    except projectapi.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
-    if request.method == "POST":
-        serializer = projectapiSerializer(data, request.data)
-        if serializer.is_valid():
-            serializer.save()
-            print("Normalized_Work_Effort",
-                  serializer.data["Normalized_Work_Effort"])
-            Normalized_Work_Effort = serializer.data["Normalized_Work_Effort"]
-            Summary_Work_Effort = serializer.data["Summary_Work_Effort"]
-            Normalised_Work_Effort_Level_1 = serializer.data["Normalised_Work_Effort_Level_1"]
-            Effort_Unphased = serializer.data["Effort_Unphased"]
-            Adjusted_Function_Points = serializer.data["Adjusted_Function_Points"]
-            Functional_Size = serializer.data["Functional_Size"]
-            Added_count = serializer.data["Added_count"]
-            Input_count = serializer.data["Input_count"]
-            Max_Team_Size = serializer.data["Max_Team_Size"]
-            Speed_of_Delivery = serializer.data["Speed_of_Delivery"]
-            Development_Type_New_Development = serializer.data["Development_Type_New_Development"]
-            Language_Type_3GL = serializer.data["Language_Type_3GL"]
-
-            model = pd.read_pickle(
-                r"C:\Users\hasee\Downloads\Logestic_Regression_Model.pickle")
-            # Make prediction
-            result = model.predict(
-                [[Normalized_Work_Effort, Summary_Work_Effort, Normalised_Work_Effort_Level_1, Effort_Unphased, Adjusted_Function_Points, Functional_Size, Added_count, Input_count, Max_Team_Size, Speed_of_Delivery, Development_Type_New_Development, Language_Type_3GL]])
-
-            classification = result[0]
-            # classification = 0
-
-            return Response(classification, status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 def projectapi_getFeatures1(method):
