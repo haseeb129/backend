@@ -52,9 +52,9 @@ def convertToTernaryClassification(data):
     def checkDefects(col):
         if col != 0:
             if col <= 20:
-                return "low"
+                return "Low"
             else:
-                return "high"
+                return "High"
         else:
             return 'Zero'
     a = data[data.columns[-1]].apply(checkDefects)
@@ -65,13 +65,13 @@ def convertToPentaClassification(data):
     def checkDefects(col):
         if col != 0:
             if col <= 20:
-                return "low"
+                return "Low"
             elif col > 20 and col <= 60:
-                return "medium"
+                return "Medium"
             elif col > 60 and col <= 90:
-                return "high"
+                return "High"
             else:
-                return "very high"
+                return "Very High"
         else:
             return 'Zero'
     a = data[data.columns[-1]].apply(checkDefects)
@@ -82,11 +82,11 @@ def conversion_to_defects(data):
     def checkDefects(col):
         if col != 0:
             if col <= 10:
-                return "low"
+                return "Low"
             elif col > 10 and col <= 15:
-                return "medium"
+                return "Medium"
             else:
-                return "high"
+                return "High"
         else:
             return 'Defects Present'
 
