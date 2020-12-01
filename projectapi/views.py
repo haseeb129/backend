@@ -32,7 +32,7 @@ def readCsv(datasetName):
     print("Dataset Name", datasetName)
     if datasetName == "ISBSG":
         data = pd.read_csv(os.getcwd() +
-                           '\\csv\\fully_final.csv')
+                           '\\csv\\fully_final_1.csv')
     elif datasetName.__contains__("promise"):
         csv = datasetName.split(" ")
         # print(type(csv[1]))
@@ -107,11 +107,11 @@ def conversion_to_defects(data):
 @decorators.permission_classes([permissions.AllowAny])
 def getFeaturesNames(request):
     print("Request getFeaturesNames", request.data)
-    dataset = request.data['datasetName']
+    dataset = request.data['csvFile']
     data, X, y = readCsv(dataset)
 
     # return Response(data.columns)
-    return Response({"columns": X.columns, "correlation": X.corr()})
+    return Response({"columns": X.columns})
 
 
 @decorators.api_view(["POST"])
@@ -214,6 +214,73 @@ def applyMLAlgo(request):
          "matrix": matrix,
          "report": report
 
+         }
+    return Response(a)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def applyMLAlgoWithRegression(request):
+    features = request.data['features']
+    mlAlgo = request.data['mlAlgo']
+    datasetFile = request.data["csvFile"]
+    # classification = request.data['classificationType']
+    data, X, y = readCsv(datasetFile)
+    sortedArray = sorted(features.items())
+    featuresNames = []
+    featuresValues = []
+
+    for i in sortedArray:
+        featuresNames.append(i[0])
+        featuresValues.append(i[1])
+    X = data[featuresNames]
+    # print(y)
+    # print(X)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.3, random_state=42)
+    if(mlAlgo == 'Decision Tree Regression'):
+        from sklearn.tree import DecisionTreeRegressor
+        model = DecisionTreeRegressor(random_state=42)
+    elif(mlAlgo == 'Logestic Regression'):
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression()
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Regression'):
+        from sklearn.neighbors import KNeighborsRegressor
+        model = KNeighborsRegressor(n_neighbors=300)
+    elif(mlAlgo == 'Linear Discriminant Analysis'):
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+        model = LinearDiscriminantAnalysis()
+    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
+        from sklearn.naive_bayes import GaussianNB
+        model = GaussianNB()
+    elif(mlAlgo == 'Support Vector Machine (SVR)'):
+        from sklearn.svm import SVR
+        model = SVR()
+    elif (mlAlgo == 'Linear Regression'):
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    elif (mlAlgo == 'Extra Trees Regression'):
+        from sklearn.ensemble import ExtraTreesRegressor
+        model = ExtraTreesRegressor(n_estimators=300)
+    elif (mlAlgo == 'Random Forest Regression'):
+        from sklearn.ensemble import RandomForestRegressor
+        model = RandomForestRegressor(n_estimators=300)
+    elif (mlAlgo == 'Ada Boost Regression'):
+        from sklearn.ensemble import AdaBoostRegressor
+        model = AdaBoostRegressor(n_estimators=500)
+    model.fit(X_train, y_train)
+    prediction = model.predict(X_test)
+    print("After 1")
+    # print("Prediction : ",prediction)
+    # print(y_test)
+    result = model.predict([[float(i) for i in featuresValues]])
+    score = model.score(X_test, y_test)
+    print("Score: ", score)
+    result = model.predict([[float(i) for i in featuresValues]])
+    print("Result", result[0])
+
+    a = {"result": result,
+         "score": score
          }
     return Response(a)
 
