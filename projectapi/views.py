@@ -117,7 +117,7 @@ def getFeaturesNames(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgo(request):
-    print("applyMLAlgoWithRegression",request.data)
+    print("applyMLAlgoWithRegression", request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
@@ -127,7 +127,7 @@ def applyMLAlgo(request):
         y = conversion_to_defects(data)
     elif (classification == "Ternary"):
         y = convertToTernaryClassification(data)
-        print(y)
+        # print(y)
     elif (classification == "Penta"):
         y = convertToPentaClassification(data)
     sortedArray = sorted(features.items())
@@ -189,7 +189,7 @@ def applyMLAlgo(request):
             res = "Defects Detected"
         a = {
             "result": res,
-            "score": score,
+            "score": int(score*100),
             "matrix": matrix,
             "report": report
 
@@ -222,7 +222,7 @@ def applyMLAlgo(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgoWithRegression(request):
-    print("applyMLAlgoWithRegression",request.data)
+    print("applyMLAlgoWithRegression", request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
