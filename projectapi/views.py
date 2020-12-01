@@ -117,6 +117,7 @@ def getFeaturesNames(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgo(request):
+    print("applyMLAlgoWithRegression",request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
@@ -141,13 +142,13 @@ def applyMLAlgo(request):
     # print(X)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=40)
-    if(mlAlgo == 'Decision Tree Classifier'):
+    if(mlAlgo == 'Decision Tree'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
     elif(mlAlgo == 'Logestic Regression'):
         from sklearn.linear_model import LogisticRegression
         model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
         from sklearn.neighbors import KNeighborsClassifier
         model = KNeighborsClassifier()
     elif(mlAlgo == 'Linear Discriminant Analysis'):
@@ -162,13 +163,13 @@ def applyMLAlgo(request):
     elif (mlAlgo == 'Linear Regression'):
         from sklearn.linear_model import LinearRegression
         model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees Classifier'):
+    elif (mlAlgo == 'Extra Trees'):
         from sklearn.ensemble import ExtraTreesClassifier
         model = ExtraTreesClassifier(n_estimators=300)
-    elif (mlAlgo == 'Random Forest Classifier'):
+    elif (mlAlgo == 'Random Forest'):
         from sklearn.ensemble import RandomForestClassifier
         model = RandomForestClassifier(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost Classifier'):
+    elif (mlAlgo == 'Ada Boost'):
         from sklearn.ensemble import AdaBoostClassifier
         model = AdaBoostClassifier(n_estimators=500)
     model.fit(X_train, y_train)
@@ -221,6 +222,7 @@ def applyMLAlgo(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgoWithRegression(request):
+    print("applyMLAlgoWithRegression",request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
@@ -237,13 +239,13 @@ def applyMLAlgoWithRegression(request):
     # print(X)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42)
-    if(mlAlgo == 'Decision Tree Regression'):
+    if(mlAlgo == 'Decision Tree'):
         from sklearn.tree import DecisionTreeRegressor
         model = DecisionTreeRegressor(random_state=42)
     elif(mlAlgo == 'Logestic Regression'):
         from sklearn.linear_model import LogisticRegression
         model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Regression'):
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
         from sklearn.neighbors import KNeighborsRegressor
         model = KNeighborsRegressor(n_neighbors=300)
     elif(mlAlgo == 'Linear Discriminant Analysis'):
@@ -258,13 +260,13 @@ def applyMLAlgoWithRegression(request):
     elif (mlAlgo == 'Linear Regression'):
         from sklearn.linear_model import LinearRegression
         model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees Regression'):
+    elif (mlAlgo == 'Extra Trees'):
         from sklearn.ensemble import ExtraTreesRegressor
         model = ExtraTreesRegressor(n_estimators=300)
-    elif (mlAlgo == 'Random Forest Regression'):
+    elif (mlAlgo == 'Random Forest'):
         from sklearn.ensemble import RandomForestRegressor
         model = RandomForestRegressor(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost Regression'):
+    elif (mlAlgo == 'Ada Boost'):
         from sklearn.ensemble import AdaBoostRegressor
         model = AdaBoostRegressor(n_estimators=500)
     model.fit(X_train, y_train)
