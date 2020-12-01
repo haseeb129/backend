@@ -117,6 +117,7 @@ def getFeaturesNames(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgo(request):
+    print("applyMLAlgoWithRegression",request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
@@ -221,6 +222,7 @@ def applyMLAlgo(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgoWithRegression(request):
+    print("applyMLAlgoWithRegression",request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
