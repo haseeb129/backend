@@ -224,7 +224,6 @@ def applyMLAlgoWithRegression(request):
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
-    # classification = request.data['classificationType']
     data, X, y = readCsv(datasetFile)
     sortedArray = sorted(features.items())
     featuresNames = []
