@@ -35,13 +35,13 @@ def readCsv(datasetName):
                            '\\csv\\fully_final_1.csv')
     elif datasetName.__contains__("promise"):
         csv = datasetName.split(" ")
-        # print(type(csv[1]))
-        # print(type(os.getcwdb()))
-        # a = str(os.getcwdb())+str('\\csv\\'+csv[1]+'.csv')
-        # a = a.replace("'", "")
-        # a = a.replace("b", "")
-        # print("Full : ", a)
-        # data = pd.read_csv(a)
+        print(type(csv[1]))
+        print(type(os.getcwdb()))
+        a = str(os.getcwdb())+str('\\csv\\'+csv[1]+'.csv')
+        a = a.replace("'", "")
+        a = a.replace("b", "")
+        print("Full : ", a)
+        data = pd.read_csv(a)
     X = data.drop(data.columns[-1], axis=1)
     y = data[data.columns[-1]]
     # X = X.drop(["Total Defects Delivered"], axis=1)
@@ -194,6 +194,7 @@ def applyMLAlgo(request):
             "report": report
 
         }
+        print(a)
         return Response(a)
     elif (classification == "Ternary"):
         score = accuracy_score(y_test, prediction)

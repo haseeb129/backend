@@ -100,8 +100,9 @@ def withInputValuesComparisonML(request):
     features = request.data['inputFields']
     list = []
     for mlAlgo in listOfMlAlgo:
-        accuracy_score = applyMLAlgo(mlAlgo, features)
-        list.append({"MLName": mlAlgo, "score": accuracy_score})
+        accuracy_score, result = applyMLAlgo(mlAlgo, features)
+        list.append(
+            {"MLName": mlAlgo, "score": accuracy_score, "result": int(result[0])})
     return Response(list)
 
 
@@ -245,11 +246,11 @@ def applyMLAlgo(mlAlgo, features):
     result = model.predict([[float(i) for i in featuresValues]])
     print("Result : ", result)
 
-    a = {"result": result[0],
-         "Accuracy_Score": score,
+    # a = {"result": result[0],
+    #      "Accuracy_Score": score,
 
-         }
-    return a
+    #      }
+    return score, result
 
 
 @decorators.api_view(["POST"])
