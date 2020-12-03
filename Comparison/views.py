@@ -28,10 +28,16 @@ from rest_framework import response, decorators, permissions, status
 
 
 def readCsv():
-    data = pd.read_csv(
-        os.getcwd()+'\\Comparison\\final_numeric_without_null.csv', decimal=',')
-    X = data.drop(["Defect Density"], axis=1)
-    y = data["Defect Density"]
+    # datasetName == "ISBSG"
+    data = pd.read_csv(os.getcwd() +
+                       '\\csv\\fully_final_1.csv')
+    X = data.drop(data.columns[-1], axis=1)
+    y = data[data.columns[-1]]
+
+    # data = pd.read_csv(
+    #     os.getcwd()+'\\Comparison\\final_numeric_without_null.csv', decimal=',')
+    # X = data.drop(["Defect Density"], axis=1)
+    # y = data["Defect Density"]
     # X = X.drop(["Total Defects Delivered"], axis=1)
     return data, X, y
 
@@ -56,7 +62,7 @@ def conversion_to_defects(data):
             return 0
     a = data["Defect Density"].apply(checkDefects)
     new = pd.get_dummies(a)
-    print(new)
+    # print(new)
     new["Defects Present"] = new["Defects Present"].apply(invertValues)
     defect_present = new['Defects Present']
     y = defect_present
@@ -71,6 +77,32 @@ def getFeaturesNames(request):
     data, X, y = readCsv()
 
     return Response(data.columns)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def comparisonOfAllMLAlgo(request):
+    print(request.data)
+    listOfMlAlgo = request.data["list"]
+    features = request.data['features']
+    list = []
+    for mlAlgo in listOfMlAlgo:
+        accuracy_score = applyMLAlgoWithoutInputValues(mlAlgo, features)
+        list.append({"MLName": mlAlgo, "score": accuracy_score})
+    return Response(list)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def withInputValuesComparisonML(request):
+    print(request.data)
+    listOfMlAlgo = request.data["list"]
+    features = request.data['inputFields']
+    list = []
+    for mlAlgo in listOfMlAlgo:
+        accuracy_score = applyMLAlgo(mlAlgo, features)
+        list.append({"MLName": mlAlgo, "score": accuracy_score})
+    return Response(list)
 
 
 @decorators.api_view(["POST"])
@@ -113,87 +145,17 @@ def inputValueComparisonML(request):
 
 
 def applyMLAlgoWithoutInputValues(mlAlgo, features):
-
-    # features = request.data['features']
-    # mlAlgo = request.data['mlAlgo']
-    data, X, y = readCsv()
-    # y = data[target]
+    data, X, y1 = readCsv()
     y = conversion_to_defects(data)
-    # print(y)
-    features = data[features]
-    sortedArray = sorted(features.items())
-    featuresNames = []
-    featuresValues = []
+    # features = data[features]
+    # sortedArray = sorted(features.items())
+    # featuresNames = []
+    # featuresValues = []
 
-    for i in sortedArray:
-        featuresNames.append(i[0])
-        featuresValues.append(i[1])
-    X = data[featuresNames]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'Decision Tree Classifier'):
-        from sklearn.tree import DecisionTreeClassifier
-        model = DecisionTreeClassifier()
-    elif(mlAlgo == 'Logestic Regression'):
-        from sklearn.linear_model import LogisticRegression
-        model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
-        from sklearn.neighbors import KNeighborsClassifier
-        model = KNeighborsClassifier()
-    elif(mlAlgo == 'Linear Discriminant Analysis'):
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        # print("LinearDiscriminantAnalysis")
-        model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
-        from sklearn.naive_bayes import GaussianNB
-        model = GaussianNB()
-    elif(mlAlgo == 'Support Vector Machine (SVM)'):
-        from sklearn.svm import SVC
-        model = SVC()
-    elif (mlAlgo == 'Linear Regression'):
-        from sklearn.linear_model import LinearRegression
-        model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees Classifier'):
-        from sklearn.ensemble import ExtraTreesClassifier
-        model = ExtraTreesClassifier(n_estimators=300)
-    elif (mlAlgo == 'Random Forest Classifier'):
-        from sklearn.ensemble import RandomForestClassifier
-        model = RandomForestClassifier(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost Classifier'):
-        from sklearn.ensemble import AdaBoostClassifier
-        model = AdaBoostClassifier(n_estimators=500)
-    model.fit(X_train, y_train)
-    prediction = model.predict(X_test)
-    print("After 1")
-    score = accuracy_score(y_test, prediction)
-    print(score)
-    # print("After 2")
-    # result = model.predict([featuresValues])
-    # print("After 3")
-    # print("Result", result)
-    matrix = confusion_matrix(y_test, prediction)
-    report = classification_report(y_test, prediction, output_dict=True)
-    a = {
-        "score": score,
-        # "matrix": matrix,
-        "report": report
-
-    }
-    return a
-
-
-def applyMLAlgo(mlAlgo, features):
-
-    data, X, y = readCsv()
-    y = conversion_to_defects(data)
-    sortedArray = sorted(features.items())
-    featuresNames = []
-    featuresValues = []
-
-    for i in sortedArray:
-        featuresNames.append(i[0])
-        featuresValues.append(i[1])
-    X = data[featuresNames]
-
+    # for i in sortedArray:
+    #     featuresNames.append(i[0])
+    #     featuresValues.append(i[1])
+    X = data[features]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     if(mlAlgo == 'Decision Tree Classifier'):
         from sklearn.tree import DecisionTreeClassifier
@@ -229,19 +191,62 @@ def applyMLAlgo(mlAlgo, features):
     prediction = model.predict(X_test)
     # print("After 1")
     score = accuracy_score(y_test, prediction.round())
-    print("Score : ", score)
-    # print("After 2")
-    result = model.predict([[float(i) for i in featuresValues]])
-    # print("After 3")
-    print("Result : ", result)
-    matrix = confusion_matrix(y_test, prediction.round())
-    report = classification_report(
-        y_test, prediction.round(), output_dict=True)
+    print(score)
+    return score
 
-    a = {"result": result,
-         "score": score,
-         "matrix": matrix,
-         "report": report
+
+def applyMLAlgo(mlAlgo, features):
+    data, X, y = readCsv()
+    y = conversion_to_defects(data)
+    sortedArray = sorted(features.items())
+    featuresNames = []
+    featuresValues = []
+
+    for i in sortedArray:
+        featuresNames.append(i[0])
+        featuresValues.append(i[1])
+    X = data[featuresNames]
+
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
+    if(mlAlgo == 'Decision Tree Classifier'):
+        from sklearn.tree import DecisionTreeClassifier
+        model = DecisionTreeClassifier()
+    elif(mlAlgo == 'Logestic Regression'):
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression()
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
+        from sklearn.neighbors import KNeighborsClassifier
+        model = KNeighborsClassifier()
+    elif(mlAlgo == 'Linear Discriminant Analysis'):
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+        model = LinearDiscriminantAnalysis()
+    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
+        from sklearn.naive_bayes import GaussianNB
+        model = GaussianNB()
+    elif(mlAlgo == 'Support Vector Machine (SVM)'):
+        from sklearn.svm import SVC
+        model = SVC()
+    elif (mlAlgo == 'Linear Regression'):
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    elif (mlAlgo == 'Extra Trees Classifier'):
+        from sklearn.ensemble import ExtraTreesClassifier
+        model = ExtraTreesClassifier(n_estimators=300)
+    elif (mlAlgo == 'Random Forest Classifier'):
+        from sklearn.ensemble import RandomForestClassifier
+        model = RandomForestClassifier(n_estimators=300)
+    elif (mlAlgo == 'Ada Boost Classifier'):
+        from sklearn.ensemble import AdaBoostClassifier
+        model = AdaBoostClassifier(n_estimators=500)
+    model.fit(X_train, y_train)
+    prediction = model.predict(X_test)
+    score = accuracy_score(y_test, prediction.round())
+    print("Score : ", score)
+    result = model.predict([[float(i) for i in featuresValues]])
+    print("Result : ", result)
+
+    a = {"result": result[0],
+         "Accuracy_Score": score,
 
          }
     return a
