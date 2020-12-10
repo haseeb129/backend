@@ -26,6 +26,9 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.naive_bayes import GaussianNB
 from rest_framework import response, decorators, permissions, status
+from sklearn.metrics import f1_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
 
 
 def readCsv(datasetName):
@@ -33,7 +36,7 @@ def readCsv(datasetName):
     if datasetName == "ISBSG":
         data = pd.read_csv(os.getcwd() +
                            '\\csv\\fully_final_1.csv')
-    elif datasetName.__contains__("promise"):
+    elif datasetName.__contains__("Promise"):
         csv = datasetName.split(" ")
         print(type(csv[1]))
         print(type(os.getcwdb()))
@@ -79,6 +82,9 @@ def convertToPentaClassification(data):
 
 
 def conversion_to_defects(data):
+    # if(data.columns[-1].dtype == 'obj'):
+    #     return data.columns[-1]
+
     def checkDefects(col):
         if col != 0:
             if col <= 10:
@@ -96,7 +102,9 @@ def conversion_to_defects(data):
         else:
             return 0
     a = data[data.columns[-1]].apply(checkDefects)
+    print(a)
     new = pd.get_dummies(a)
+    print(new)
     new["Defects Present"] = new["Defects Present"].apply(invertValues)
     defect_present = new['Defects Present']
     y = defect_present
@@ -117,12 +125,17 @@ def getFeaturesNames(request):
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgo(request):
+    from sklearn.metrics import f1_score
+    from sklearn.metrics import precision_score
+    from sklearn.metrics import recall_score
     print("applyMLAlgoWithRegression", request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
     classification = request.data['classificationType']
     data, X, y = readCsv(datasetFile)
+    # print(X)
+    # print(y)
     if(classification == "Binary"):
         y = conversion_to_defects(data)
     elif (classification == "Ternary"):
@@ -179,10 +192,13 @@ def applyMLAlgo(request):
     # print(y_test)
     result = model.predict([[float(i) for i in featuresValues]])
     if(classification == "Binary"):
-        score = accuracy_score(y_test, prediction.round())
-        matrix = confusion_matrix(y_test, prediction.round())
+        score = accuracy_score(y_test, prediction)
+        f1_score = f1_score(y_test, prediction, average='weighted')
+        recall = recall_score(y_test, prediction, average='weighted')
+        precision = precision_score(y_test, prediction, average='weighted')
+        matrix = confusion_matrix(y_test, prediction)
         report = classification_report(
-            y_test, prediction.round(), output_dict=True)
+            y_test, prediction, output_dict=True)
         if(result[0] == 0):
             res = "No Defects Detected"
         else:
@@ -190,6 +206,9 @@ def applyMLAlgo(request):
         a = {
             "result": res,
             "score": int(score*100),
+            "precision": precision,
+            "recall": recall,
+            "f1_score": f1_score,
             "matrix": matrix,
             "report": report
 
@@ -207,12 +226,20 @@ def applyMLAlgo(request):
         report = classification_report(
             y_test, prediction, output_dict=True)
     print("Score: ", score)
-    # print("After 2")
-    # print("After 3")
+
+    f1_score = f1_score(y_test, prediction, average='weighted')
+    recall = recall_score(y_test, prediction, average='weighted')
+    precision = precision_score(y_test, prediction, average='weighted')
+    print('F1 score:', f1_score)
+    print('Recall:', recall)
+    print('Precision:', precision)
     print("Result", result[0])
 
     a = {"result": result,
          "score": score,
+         "precision": precision,
+         "recall": recall,
+         "f1_score": f1_score,
          "matrix": matrix,
          "report": report
 
