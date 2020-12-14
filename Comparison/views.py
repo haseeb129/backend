@@ -87,6 +87,7 @@ def comparisonOfAllMLAlgo(request):
     features = request.data['features']
     list = []
     for mlAlgo in listOfMlAlgo:
+        print(mlAlgo)
         accuracy_score = applyMLAlgoWithoutInputValues(mlAlgo, features)
         list.append({"MLName": mlAlgo, "score": accuracy_score})
     return Response(list)
@@ -158,13 +159,13 @@ def applyMLAlgoWithoutInputValues(mlAlgo, features):
     #     featuresValues.append(i[1])
     X = data[features]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'Decision Tree Classifier'):
+    if(mlAlgo == 'Decision Tree'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
     elif(mlAlgo == 'Logestic Regression'):
         from sklearn.linear_model import LogisticRegression
         model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
         from sklearn.neighbors import KNeighborsClassifier
         model = KNeighborsClassifier()
     elif(mlAlgo == 'Linear Discriminant Analysis'):
@@ -179,13 +180,13 @@ def applyMLAlgoWithoutInputValues(mlAlgo, features):
     elif (mlAlgo == 'Linear Regression'):
         from sklearn.linear_model import LinearRegression
         model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees Classifier'):
+    elif (mlAlgo == 'Extra Trees'):
         from sklearn.ensemble import ExtraTreesClassifier
         model = ExtraTreesClassifier(n_estimators=300)
-    elif (mlAlgo == 'Random Forest Classifier'):
+    elif (mlAlgo == 'Random Forest'):
         from sklearn.ensemble import RandomForestClassifier
         model = RandomForestClassifier(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost Classifier'):
+    elif (mlAlgo == 'Ada Boost'):
         from sklearn.ensemble import AdaBoostClassifier
         model = AdaBoostClassifier(n_estimators=500)
     model.fit(X_train, y_train)
@@ -209,13 +210,13 @@ def applyMLAlgo(mlAlgo, features):
     X = data[featuresNames]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'Decision Tree Classifier'):
+    if(mlAlgo == 'Decision Tree'):
         from sklearn.tree import DecisionTreeClassifier
         model = DecisionTreeClassifier()
     elif(mlAlgo == 'Logestic Regression'):
         from sklearn.linear_model import LogisticRegression
         model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN) Classifier'):
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
         from sklearn.neighbors import KNeighborsClassifier
         model = KNeighborsClassifier()
     elif(mlAlgo == 'Linear Discriminant Analysis'):
@@ -230,13 +231,13 @@ def applyMLAlgo(mlAlgo, features):
     elif (mlAlgo == 'Linear Regression'):
         from sklearn.linear_model import LinearRegression
         model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees Classifier'):
+    elif (mlAlgo == 'Extra Trees'):
         from sklearn.ensemble import ExtraTreesClassifier
         model = ExtraTreesClassifier(n_estimators=300)
-    elif (mlAlgo == 'Random Forest Classifier'):
+    elif (mlAlgo == 'Random Forest'):
         from sklearn.ensemble import RandomForestClassifier
         model = RandomForestClassifier(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost Classifier'):
+    elif (mlAlgo == 'Ada Boost'):
         from sklearn.ensemble import AdaBoostClassifier
         model = AdaBoostClassifier(n_estimators=500)
     model.fit(X_train, y_train)
@@ -261,13 +262,13 @@ def getTwoFeaturesNames(request):
     features1 = dmFeatureComparison(
         request.data["a1"],
         request.data["a2"],
-        request.data['featuresCount'],
+        # request.data['featuresCount'],
         # request.data['targetClass'],
     )
     features2 = dmFeatureComparison(
         request.data["b1"],
         request.data["b2"],
-        request.data['featuresCount'],
+        # request.data['featuresCount'],
         # request.data['targetClass'],
     )
     a = {"First": features1, "Second": features2}
@@ -278,13 +279,13 @@ def getTwoFeaturesNames(request):
 # @decorators.permission_classes([permissions.AllowAny])
 
 
-def dmFeatureComparison(method1, method2, featuresCount):
+def dmFeatureComparison(method1, method2):
     # method = request.data["method"]
     # print(request.data)
     # print("X ::", X, y)
 
     a = returnFeatuesList(
-        featuresCount,
+        # featuresCount,
         method1,
         method2,
         # target
@@ -297,67 +298,67 @@ def dmFeatureComparison(method1, method2, featuresCount):
     # return Response(a)
 
 
-def returnFeatuesList(numberOfFeatures, method, method1):
+def returnFeatuesList(method, method1):
     # print(numberOfFeatures, method, method1, X, y)
     data, X, y = readCsv()
     # y = data[target]
     encoded = conversion_to_defects(data)
-    if(method == 'filter'):
-        featureList = kbest(numberOfFeatures, X, encoded)
+    if(method == 'Filter Method (Kbest)'):
+        featureList = kbest(X, encoded)
         return featureList
-    elif method == 'wrapper':
+    elif method == 'Wrapper Method (Recursive)':
         if(method1 == 'svr'):
-            featureList = recursive(method1, numberOfFeatures, X, y)
+            featureList = recursive(method1,  X, y)
             return featureList
         elif method1 == 'decisiontree':
-            featureList = recursive(method1, numberOfFeatures, X, y)
+            featureList = recursive(method1, X, encoded)
             return featureList
         elif method1 == 'logesticregression':
-            featureList = recursive(method1, numberOfFeatures, X, y)
+            featureList = recursive(method1, X, encoded)
             return featureList
         else:
             pass
     elif method == 'Embedded Method (Ridge)':
-        featureList = embedded(numberOfFeatures, X, y)
+        featureList = embedded(X, y)
         return featureList
     else:
         pass
 
 
-def recursive(method, count, X, y):
+def recursive(method, X, y):
     from sklearn.feature_selection import RFE
     from sklearn.linear_model import LogisticRegression
     from sklearn.svm import SVR
     from sklearn.tree import DecisionTreeClassifier
+    print(method)
     if(method == 'svr'):
         model = SVR(kernel="linear")
     elif method == 'decisiontree':
         model = DecisionTreeClassifier()
     elif method == 'logesticregression':
         model = LogisticRegression()
-    rfe = RFE(model, count)
-    fitRecursive = rfe.fit(X, y)
+    rfe = RFE(model, 10, step=1)
+    fitRecursive = rfe.fit(X.abs(), y)
+    # print(rfe)
     d2 = {'Feature': X.columns, "Score": fitRecursive.ranking_}
     df2 = pd.DataFrame(d2)
     df2['Score'] = df2['Score']
     a = df2
 #     print(a)
     d = dict(a[a["Score"] == 1])
-#     print(d)
+    # print(d["Feature"])
     return d["Feature"]
 
 
-def kbest(count, X, y):
-    from sklearn.feature_selection import SelectKBest
+def kbest(X, y):
+    from sklearn.feature_selection import SelectKBest, f_classif
     from sklearn.feature_selection import chi2
-    test = SelectKBest(score_func=chi2, k=count)
+    test = SelectKBest(chi2, k=10)
     # X1 = pd.DataFrame()
-    for i in X.columns:
-        # X[i] = pd.to_numeric(X[i], errors='coerce').fillna(0, downcast='infer')
-        # X[i] = X[i].values.reshape(2, 2)
-        X[i] = pd.to_numeric(X[i], errors='coerce')
-    print(X.info())
-    # X=X.reshape(-1,-1)
+    # for i in X.columns:
+    # X[i] = pd.to_numeric(X[i], errors='coerce').fillna(0, downcast='infer')
+    # X[i] = X[i].values.reshape(2, 2)
+    # X[i] = pd.to_numeric(X[i], errors='coerce')
     fit = test.fit(X.abs(), y)
     d = {'Feature': X.columns.values, "Score": fit.scores_}
     df = pd.DataFrame(d)
@@ -367,36 +368,8 @@ def kbest(count, X, y):
     a = dict(df.nlargest(10, ['Score']))
     return a["Feature"]
 
-# def kbest(count, X, y):
-#     from sklearn.feature_selection import SelectKBest
-#     from sklearn.feature_selection import chi2
-#     test = SelectKBest(score_func=chi2, k=count)
-#     # print(count, X, y)
-#     # X1 = pd.DataFrame()
-#     # for i in X:
-#     #     X1.append(pd.DataFrame(columns=pd.to_numeric(i, errors='coerce')))
-#     # a = X.abs()
-#     # X1 = X.to_numeric(errors='coerce')
-#     data, X, y1 = readCsv()
-#     # print("rkhgkrhfjk", a)
-#     # try:
-#     # print(X.info())
-#     for i in X.columns:
-#         X[i] = pd.to_numeric(X[i], errors='coerce')
-#     print(X.info())
-#     fit = test.fit(X.abs(), y)
-#     # except:
-#     print("After fit")
-#     d = {'Feature': X.columns.values, "Score": fit.scores_}
-#     df = pd.DataFrame(d)
-#     df['Score'] = df['Score'].astype(int)
-#     # import heapq
-#     # import random
-#     a = dict(df.nlargest(10, ['Score']))
-#     return a["Feature"]
 
-
-def embedded(count, X, y):
+def embedded(X, y):
     from sklearn.linear_model import Ridge
     ridge = Ridge(alpha=1.0)
     ridge.fit(X, y)

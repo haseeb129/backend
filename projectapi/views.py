@@ -128,123 +128,84 @@ def applyMLAlgo(request):
     from sklearn.metrics import f1_score
     from sklearn.metrics import precision_score
     from sklearn.metrics import recall_score
-    print("applyMLAlgoWithRegression", request.data)
+    from sklearn.metrics import roc_curve
+    from sklearn.metrics import roc_auc_score
+    from sklearn.metrics import precision_recall_curve
+    from sklearn.metrics import auc
+    print("Request", request.data)
     features = request.data['features']
     mlAlgo = request.data['mlAlgo']
     datasetFile = request.data["csvFile"]
     classification = request.data['classificationType']
     data, X, y = readCsv(datasetFile)
-    # print(X)
-    # print(y)
     if(classification == "Binary"):
         y = conversion_to_defects(data)
     elif (classification == "Ternary"):
         y = convertToTernaryClassification(data)
-        # print(y)
     elif (classification == "Penta"):
         y = convertToPentaClassification(data)
     sortedArray = sorted(features.items())
     featuresNames = []
     featuresValues = []
-
     for i in sortedArray:
         featuresNames.append(i[0])
         featuresValues.append(i[1])
     X = data[featuresNames]
-    # print(y)
-    # print(X)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=40)
-    if(mlAlgo == 'Decision Tree'):
-        from sklearn.tree import DecisionTreeClassifier
-        model = DecisionTreeClassifier()
-    elif(mlAlgo == 'Logestic Regression'):
-        from sklearn.linear_model import LogisticRegression
-        model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
-        from sklearn.neighbors import KNeighborsClassifier
-        model = KNeighborsClassifier()
-    elif(mlAlgo == 'Linear Discriminant Analysis'):
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
-        from sklearn.naive_bayes import GaussianNB
-        model = GaussianNB()
-    elif(mlAlgo == 'Support Vector Machine (SVM)'):
-        from sklearn.svm import SVC
-        model = SVC()
-    elif (mlAlgo == 'Linear Regression'):
-        from sklearn.linear_model import LinearRegression
-        model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees'):
-        from sklearn.ensemble import ExtraTreesClassifier
-        model = ExtraTreesClassifier(n_estimators=300)
-    elif (mlAlgo == 'Random Forest'):
-        from sklearn.ensemble import RandomForestClassifier
-        model = RandomForestClassifier(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost'):
-        from sklearn.ensemble import AdaBoostClassifier
-        model = AdaBoostClassifier(n_estimators=500)
+    model = mlAlgoList(mlAlgo)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
-    print("After 1")
-    # print("Prediction : ",prediction)
-    # print(y_test)
     result = model.predict([[float(i) for i in featuresValues]])
+    # For Post Prediction
+    lr_probs = model.predict_proba(X_test)
+    lr_probs = lr_probs[:, 1]
+    lr_auc = roc_auc_score(y_test, lr_probs)
+    print('Logistic: ROC AUC=%.3f' % (lr_auc))
+    lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+    roc = conversion(lr_fpr, lr_tpr)
+    lr_precision, lr_recall, _ = precision_recall_curve(y_test, lr_probs)
+    lr_f1, lr_auc = f1_score(y_test, prediction), auc(lr_recall, lr_precision)
+    auc = conversion(lr_recall, lr_precision)
+    # End Post Prediction
     if(classification == "Binary"):
-        score = accuracy_score(y_test, prediction)
-        f1_score = f1_score(y_test, prediction, average='weighted')
-        recall = recall_score(y_test, prediction, average='weighted')
-        precision = precision_score(y_test, prediction, average='weighted')
-        matrix = confusion_matrix(y_test, prediction)
-        report = classification_report(
-            y_test, prediction, output_dict=True)
-        if(result[0] == 0):
-            res = "No Defects Detected"
-        else:
-            res = "Defects Detected"
-        a = {
-            "result": res,
-            "score": int(score*100),
-            "precision": precision,
-            "recall": recall,
-            "f1_score": f1_score,
-            "matrix": matrix,
-            "report": report
-
-        }
-        print(a)
-        return Response(a)
+        response = resultOfMl(result, auc, roc, y_test, prediction)
+        return Response(response)
     elif (classification == "Ternary"):
-        score = accuracy_score(y_test, prediction)
-        matrix = confusion_matrix(y_test, prediction)
-        report = classification_report(
-            y_test, prediction, output_dict=True)
+        response = resultOfMl(result, auc, roc, y_test, prediction)
+        return Response(response)
     elif (classification == "Penta"):
-        score = accuracy_score(y_test, prediction)
-        matrix = confusion_matrix(y_test, prediction)
-        report = classification_report(
-            y_test, prediction, output_dict=True)
-    print("Score: ", score)
+        response = resultOfMl(result, auc, roc, y_test, prediction)
+        return Response(response)
 
+
+def resultOfMl(result, auc, roc, y_test, prediction):
+    from sklearn.metrics import f1_score
+    from sklearn.metrics import precision_score
+    from sklearn.metrics import recall_score
+    score = accuracy_score(y_test, prediction)
     f1_score = f1_score(y_test, prediction, average='weighted')
     recall = recall_score(y_test, prediction, average='weighted')
     precision = precision_score(y_test, prediction, average='weighted')
-    print('F1 score:', f1_score)
-    print('Recall:', recall)
-    print('Precision:', precision)
-    print("Result", result[0])
-
-    a = {"result": result,
-         "score": score,
-         "precision": precision,
-         "recall": recall,
-         "f1_score": f1_score,
-         "matrix": matrix,
-         "report": report
-
-         }
-    return Response(a)
+    matrix = confusion_matrix(y_test, prediction)
+    report = classification_report(
+        y_test, prediction, output_dict=True)
+    if(result[0] == 0):
+        res = "No Defects Detected"
+    elif(result[0] == 1):
+        res = "Defects Detected"
+    a = {
+        "result": res,
+        "score": int(score*100),
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1_score,
+        "matrix": matrix,
+        "report": report,
+        "roc": roc,
+        "auc": auc
+    }
+    return (a)
 
 
 @decorators.api_view(["POST"])
@@ -263,8 +224,6 @@ def applyMLAlgoWithRegression(request):
         featuresNames.append(i[0])
         featuresValues.append(i[1])
     X = data[featuresNames]
-    # print(y)
-    # print(X)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42)
     if(mlAlgo == 'Decision Tree'):
@@ -299,7 +258,7 @@ def applyMLAlgoWithRegression(request):
         model = AdaBoostRegressor(n_estimators=500)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
-    print("After 1")
+    # print("After 1")
     # print("Prediction : ",prediction)
     # print(y_test)
     result = model.predict([[float(i) for i in featuresValues]])
@@ -445,3 +404,52 @@ def applyBoostingAlgo(request):
         model.fit(X_train, y_train)
         a = model.score(X_test, y_test)
     return Response(a)
+
+
+def conversion(arr1, arr2):
+    arr = []
+    print(arr2)
+    for z in range(len(arr2)):
+        arr.append({"x": arr1[z], "y": arr2[z]})
+    return arr
+
+
+def conversion1(arr1, arr2):
+    arr = []
+    for z in range(len(arr2)):
+        arr.append([str(arr1[z]), arr2[z]])
+    return arr
+
+
+def mlAlgoList(mlAlgo):
+    if(mlAlgo == 'Decision Tree'):
+        from sklearn.tree import DecisionTreeClassifier
+        model = DecisionTreeClassifier()
+    elif(mlAlgo == 'Logestic Regression'):
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression()
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
+        from sklearn.neighbors import KNeighborsClassifier
+        model = KNeighborsClassifier()
+    elif(mlAlgo == 'Linear Discriminant Analysis'):
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+        model = LinearDiscriminantAnalysis()
+    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
+        from sklearn.naive_bayes import GaussianNB
+        model = GaussianNB()
+    elif(mlAlgo == 'Support Vector Machine (SVM)'):
+        from sklearn.svm import SVC
+        model = SVC()
+    elif (mlAlgo == 'Linear Regression'):
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    elif (mlAlgo == 'Extra Trees'):
+        from sklearn.ensemble import ExtraTreesClassifier
+        model = ExtraTreesClassifier(n_estimators=300)
+    elif (mlAlgo == 'Random Forest'):
+        from sklearn.ensemble import RandomForestClassifier
+        model = RandomForestClassifier(n_estimators=300)
+    elif (mlAlgo == 'Ada Boost'):
+        from sklearn.ensemble import AdaBoostClassifier
+        model = AdaBoostClassifier(n_estimators=500)
+    return model
