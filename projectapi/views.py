@@ -2,8 +2,9 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from .models import projectapi
-from .serializers import projectapiSerializer
+from .models import previousProjects
+from django.views.decorators.csrf import csrf_exempt
+# from .serializers import projectapiSerializer
 import csv
 import io
 import json
@@ -30,6 +31,7 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
 from Comparison import views as comparisonView
+from bson import ObjectId
 
 
 def readCsv(datasetName):
@@ -431,7 +433,7 @@ def mlAlgoList(mlAlgo):
         model = LinearRegression()
     elif (mlAlgo == 'Extra Trees'):
         from sklearn.ensemble import ExtraTreesClassifier
-        model = ExtraTreesClassifier(n_estimators=300, random_state=42)
+        model = ExtraTreesClassifier(n_estimators=300, random_state=2)
     elif (mlAlgo == 'Random Forest'):
         from sklearn.ensemble import RandomForestClassifier
         model = RandomForestClassifier(n_estimators=300, random_state=42)
@@ -439,3 +441,45 @@ def mlAlgoList(mlAlgo):
         from sklearn.ensemble import AdaBoostClassifier
         model = AdaBoostClassifier(n_estimators=500)
     return model
+
+
+@csrf_exempt
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def savePreviousProjects(request):
+    print(request.data)
+    # _id = request.data["_id"]
+    user_id = request.data['user_id']
+    state = request.data['state']
+    log = previousProjects(user_id=user_id, state=state)
+    log.save()
+    return Response("Inserted")
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def getUserlog(request):
+    print(request.data)
+    # user_id = request.data['id']
+    # logs = previousProjects.objects.all().filter(user_id=userName)
+
+    userName = request.data['username']
+
+    logs1 = previousProjects.objects.all()
+    print("data: ", logs1[0]._id)
+
+    logs = previousProjects.objects.all().filter(user_id=userName)
+    data = [{'userName': record.user_id, "log_id": str(record._id), 'state': record.state}
+            for record in logs]
+    return Response(data)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def deleteUserlog(request):
+    print(request.data)
+    user_id = request.data['id']
+    log = previousProjects.objects.get(_id=ObjectId(user_id))
+    print("Logs", log.user_id)
+    log.delete()
+    return Response("Successfully Deleted")
