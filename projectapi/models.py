@@ -2,6 +2,7 @@ from django.db import models
 
 
 class projectapi(models.Model):
+    
     Normalized_Work_Effort = models.FloatField()
     Summary_Work_Effort = models.FloatField()
     Normalised_Work_Effort_Level_1 = models.FloatField()

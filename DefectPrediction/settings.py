@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     'BasicCOCOMO.apps.Cocomo1Config',
     'COCOMO2.apps.Cocomo2Config',
     # 'tastypie',
-    'ifpug.apps.IfpugConfig',
+    'ifpug',
     'rest_framework',
     'corsheaders',
     # 'knox',
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'UploadFile',
     'Comparison',
     'StatsUploadDataset',
+    'COSMIC',
     # 'jwtauth'
 ]
 

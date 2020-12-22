@@ -25,7 +25,7 @@ urlpatterns = [
     path('IntermediateCOCOMO/', include('BasicCOCOMO.IntermediateCOCOMO')),
     path('detailedCOCOMO/', include('BasicCOCOMO.detailedCOCOMO')),
     path('COCOMO2/', include("COCOMO2.urls")),
-    path('ifpug/', include("ifpug.urls")),
+    # path('ifpug/', include("ifpug.urls")),
     # path('register/', views.RegisterView, name="register"),
     # path('login/', views.LoginView, name="login"),
     path('api-auth/', include("rest_framework.urls")),
@@ -38,4 +38,6 @@ urlpatterns = [
     path('comparison/', include("Comparison.urls")),
     path('stats/', include("StatsUploadDataset.urls")),
     path('ppa/', include("PostPredictionAnalysis.urls")),
+    path('ifpug/', include("ifpug.urls")),
+    path('COSMIC/', include("COSMIC.urls")),
 ]
