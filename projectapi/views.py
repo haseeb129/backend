@@ -2,8 +2,9 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-from .models import projectapi
-from .serializers import projectapiSerializer
+from .models import previousProjects
+from django.views.decorators.csrf import csrf_exempt
+# from .serializers import projectapiSerializer
 import csv
 import io
 import json
@@ -29,6 +30,8 @@ from rest_framework import response, decorators, permissions, status
 from sklearn.metrics import f1_score
 from sklearn.metrics import precision_score
 from sklearn.metrics import recall_score
+from Comparison import views as comparisonView
+from bson import ObjectId
 
 
 def readCsv(datasetName):
@@ -117,8 +120,6 @@ def getFeaturesNames(request):
     print("Request getFeaturesNames", request.data)
     dataset = request.data['csvFile']
     data, X, y = readCsv(dataset)
-
-    # return Response(data.columns)
     return Response({"columns": X.columns})
 
 
@@ -160,7 +161,10 @@ def applyMLAlgo(request):
     # For Post Prediction
     lr_probs = model.predict_proba(X_test)
     lr_probs = lr_probs[:, 1]
-    lr_auc = roc_auc_score(y_test, lr_probs)
+    if(classification == 'Binary'):
+        lr_auc = roc_auc_score(y_test, lr_probs)
+    else:
+        lr_auc = multiclass_roc_auc_score(y_test, lr_probs)
     print('Logistic: ROC AUC=%.3f' % (lr_auc))
     lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
     roc = conversion(lr_fpr, lr_tpr)
@@ -208,6 +212,17 @@ def resultOfMl(result, auc, roc, y_test, prediction):
     return (a)
 
 
+def multiclass_roc_auc_score(y_test, y_pred, average="macro"):
+    from sklearn import preprocessing
+    # from sklearn.metrics import roc_curve
+    from sklearn.metrics import roc_auc_score
+    lb = preprocessing.LabelBinarizer()
+    lb.fit(y_test)
+    y_test = lb.transform(y_test)
+    # y_pred = lb.transform(y_pred)
+    return roc_auc_score(y_test, y_pred, average=average)
+
+
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgoWithRegression(request):
@@ -219,54 +234,20 @@ def applyMLAlgoWithRegression(request):
     sortedArray = sorted(features.items())
     featuresNames = []
     featuresValues = []
-
     for i in sortedArray:
         featuresNames.append(i[0])
         featuresValues.append(i[1])
     X = data[featuresNames]
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.3, random_state=42)
-    if(mlAlgo == 'Decision Tree'):
-        from sklearn.tree import DecisionTreeRegressor
-        model = DecisionTreeRegressor(random_state=42)
-    elif(mlAlgo == 'Logestic Regression'):
-        from sklearn.linear_model import LogisticRegression
-        model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
-        from sklearn.neighbors import KNeighborsRegressor
-        model = KNeighborsRegressor(n_neighbors=300)
-    elif(mlAlgo == 'Linear Discriminant Analysis'):
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
-        from sklearn.naive_bayes import GaussianNB
-        model = GaussianNB()
-    elif(mlAlgo == 'Support Vector Machine (SVR)'):
-        from sklearn.svm import SVR
-        model = SVR()
-    elif (mlAlgo == 'Linear Regression'):
-        from sklearn.linear_model import LinearRegression
-        model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees'):
-        from sklearn.ensemble import ExtraTreesRegressor
-        model = ExtraTreesRegressor(n_estimators=300)
-    elif (mlAlgo == 'Random Forest'):
-        from sklearn.ensemble import RandomForestRegressor
-        model = RandomForestRegressor(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost'):
-        from sklearn.ensemble import AdaBoostRegressor
-        model = AdaBoostRegressor(n_estimators=500)
+    model = mlAlgoListForRegression(mlAlgo)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
-    # print("After 1")
-    # print("Prediction : ",prediction)
-    # print(y_test)
     result = model.predict([[float(i) for i in featuresValues]])
     score = model.score(X_test, y_test)
     print("Score: ", score)
     result = model.predict([[float(i) for i in featuresValues]])
     print("Result", result[0])
-
     a = {"result": int(result),
          "score": int(score*100)
          }
@@ -277,40 +258,20 @@ def applyMLAlgoWithRegression(request):
 @decorators.permission_classes([permissions.AllowAny])
 def projectapi_getFeatures(request):
     method = request.data["method"]
+    # datasetName = request.data["csvFile"]
     print(request.data)
-    print(method)
-    if(method == 'Filter Method (Kbest)'):
-        X = ['Normalised Work Effort', 'Summary Work Effort', 'Normalised Work Effort Level 1', 'Effort Unphased',
-             'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count', 'Speed of Delivery', 'Normalised Level 1 PDR (ufp)']
-
-    elif(method == 'Wrapper Method (Recursive)'):
-        X = ['Max Team Size', 'Project Elapsed Time', 'Language_Type_4GL', 'Development_Platform_MR',
-             'Value Adjustment Factor', 'Normalised Work Effort', 'Adjusted Function Points', 'Functional Size', 'Input count']
-
-    elif (method == 'Embedded Method (Ridge)'):
-        X = ['Normalised Level 1 PDR (ufp)', 'Normalised Work Effort', 'Summary Work Effort',
-             'Normalised Work Effort Level 1', 'Effort Unphased', 'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count']
-
-    return Response(X)
+    list = comparisonView.returnFeatuesList(
+        method, 'decisiontree', request.data['csvFile'])
+    print(list)
+    return Response(list)
 
 
 def projectapi_getFeatures1(method):
-    # method = request.data["method"]
-    # print(request.data)
-    print(method)
-    if(method == 'kbest'):
-        X = ['Normalised Work Effort', 'Summary Work Effort', 'Normalised Work Effort Level 1', 'Effort Unphased',
-             'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count', 'Speed of Delivery', 'Normalised Level 1 PDR (ufp)']
-
-    elif(method == 'recursive'):
-        X = ['Year of Project', 'Max Team Size', 'Project Elapsed Time', 'Language_Type_4GL', 'Development_Platform_MR',
-             'Value Adjustment Factor', 'Normalised Work Effort', 'Adjusted Function Points', 'Functional Size', 'Input count']
-
-    elif (method == 'filter'):
-        X = ['Normalised Level 1 PDR (ufp)', 'Year of Project', 'Normalised Work Effort', 'Summary Work Effort',
-             'Normalised Work Effort Level 1', 'Effort Unphased', 'Adjusted Function Points', 'Functional Size', 'Added count', 'Input count']
-
-    return X
+    method = request.data["method"]
+    print(request.data)
+    list = comparisonView.returnFeatuesList(method, 'decisiontree')
+    print(list)
+    return (list)
 
 
 @decorators.api_view(["POST"])
@@ -414,17 +375,44 @@ def conversion(arr1, arr2):
     return arr
 
 
-def conversion1(arr1, arr2):
-    arr = []
-    for z in range(len(arr2)):
-        arr.append([str(arr1[z]), arr2[z]])
-    return arr
+def mlAlgoListForRegression(mlAlgo):
+    if(mlAlgo == 'Decision Tree'):
+        from sklearn.tree import DecisionTreeRegressor
+        model = DecisionTreeRegressor(random_state=42)
+    elif(mlAlgo == 'Logestic Regression'):
+        from sklearn.linear_model import LogisticRegression
+        model = LogisticRegression()
+    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
+        from sklearn.neighbors import KNeighborsRegressor
+        model = KNeighborsRegressor(n_neighbors=300)
+    elif(mlAlgo == 'Linear Discriminant Analysis'):
+        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+        model = LinearDiscriminantAnalysis()
+    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
+        from sklearn.naive_bayes import GaussianNB
+        model = GaussianNB()
+    elif(mlAlgo == 'Support Vector Machine (SVR)'):
+        from sklearn.svm import SVR
+        model = SVR()
+    elif (mlAlgo == 'Linear Regression'):
+        from sklearn.linear_model import LinearRegression
+        model = LinearRegression()
+    elif (mlAlgo == 'Extra Trees'):
+        from sklearn.ensemble import ExtraTreesRegressor
+        model = ExtraTreesRegressor(n_estimators=300)
+    elif (mlAlgo == 'Random Forest'):
+        from sklearn.ensemble import RandomForestRegressor
+        model = RandomForestRegressor(n_estimators=300)
+    elif (mlAlgo == 'Ada Boost'):
+        from sklearn.ensemble import AdaBoostRegressor
+        model = AdaBoostRegressor(n_estimators=500)
+    return model
 
 
 def mlAlgoList(mlAlgo):
     if(mlAlgo == 'Decision Tree'):
         from sklearn.tree import DecisionTreeClassifier
-        model = DecisionTreeClassifier()
+        model = DecisionTreeClassifier(random_state=42)
     elif(mlAlgo == 'Logestic Regression'):
         from sklearn.linear_model import LogisticRegression
         model = LogisticRegression()
@@ -439,17 +427,59 @@ def mlAlgoList(mlAlgo):
         model = GaussianNB()
     elif(mlAlgo == 'Support Vector Machine (SVM)'):
         from sklearn.svm import SVC
-        model = SVC()
+        model = SVC(probability=True)
     elif (mlAlgo == 'Linear Regression'):
         from sklearn.linear_model import LinearRegression
         model = LinearRegression()
     elif (mlAlgo == 'Extra Trees'):
         from sklearn.ensemble import ExtraTreesClassifier
-        model = ExtraTreesClassifier(n_estimators=300)
+        model = ExtraTreesClassifier(n_estimators=300, random_state=2)
     elif (mlAlgo == 'Random Forest'):
         from sklearn.ensemble import RandomForestClassifier
-        model = RandomForestClassifier(n_estimators=300)
+        model = RandomForestClassifier(n_estimators=300, random_state=42)
     elif (mlAlgo == 'Ada Boost'):
         from sklearn.ensemble import AdaBoostClassifier
         model = AdaBoostClassifier(n_estimators=500)
     return model
+
+
+@csrf_exempt
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def savePreviousProjects(request):
+    print(request.data)
+    # _id = request.data["_id"]
+    user_id = request.data['user_id']
+    state = request.data['state']
+    log = previousProjects(user_id=user_id, state=state)
+    log.save()
+    return Response("Inserted")
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def getUserlog(request):
+    print(request.data)
+    # user_id = request.data['id']
+    # logs = previousProjects.objects.all().filter(user_id=userName)
+
+    userName = request.data['username']
+
+    logs1 = previousProjects.objects.all()
+    print("data: ", logs1[0]._id)
+
+    logs = previousProjects.objects.all().filter(user_id=userName)
+    data = [{'userName': record.user_id, "log_id": str(record._id), 'state': record.state}
+            for record in logs]
+    return Response(data)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def deleteUserlog(request):
+    print(request.data)
+    user_id = request.data['id']
+    log = previousProjects.objects.get(_id=ObjectId(user_id))
+    print("Logs", log.user_id)
+    log.delete()
+    return Response("Successfully Deleted")

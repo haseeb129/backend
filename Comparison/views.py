@@ -25,6 +25,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
 
 from rest_framework import response, decorators, permissions, status
+from projectapi import views as projectapiView
 
 
 def readCsv():
@@ -33,12 +34,6 @@ def readCsv():
                        '\\csv\\fully_final_1.csv')
     X = data.drop(data.columns[-1], axis=1)
     y = data[data.columns[-1]]
-
-    # data = pd.read_csv(
-    #     os.getcwd()+'\\Comparison\\final_numeric_without_null.csv', decimal=',')
-    # X = data.drop(["Defect Density"], axis=1)
-    # y = data["Defect Density"]
-    # X = X.drop(["Total Defects Delivered"], axis=1)
     return data, X, y
 
 
@@ -75,7 +70,6 @@ def getFeaturesNames(request):
     print("Request getFeaturesNames", request.data)
     dataset = request.data['datasetName']
     data, X, y = readCsv()
-
     return Response(data.columns)
 
 
@@ -115,7 +109,6 @@ def getTwoMLAlgoNames(request):
     ml1 = applyMLAlgoWithoutInputValues(
         request.data["m1"],
         request.data["features"],
-        # request.data["targetClass"],
     )
     ml2 = applyMLAlgoWithoutInputValues(
         request.data["m2"],
@@ -149,46 +142,9 @@ def inputValueComparisonML(request):
 def applyMLAlgoWithoutInputValues(mlAlgo, features):
     data, X, y1 = readCsv()
     y = conversion_to_defects(data)
-    # features = data[features]
-    # sortedArray = sorted(features.items())
-    # featuresNames = []
-    # featuresValues = []
-
-    # for i in sortedArray:
-    #     featuresNames.append(i[0])
-    #     featuresValues.append(i[1])
     X = data[features]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'Decision Tree'):
-        from sklearn.tree import DecisionTreeClassifier
-        model = DecisionTreeClassifier()
-    elif(mlAlgo == 'Logestic Regression'):
-        from sklearn.linear_model import LogisticRegression
-        model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
-        from sklearn.neighbors import KNeighborsClassifier
-        model = KNeighborsClassifier()
-    elif(mlAlgo == 'Linear Discriminant Analysis'):
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
-        from sklearn.naive_bayes import GaussianNB
-        model = GaussianNB()
-    elif(mlAlgo == 'Support Vector Machine (SVM)'):
-        from sklearn.svm import SVC
-        model = SVC()
-    elif (mlAlgo == 'Linear Regression'):
-        from sklearn.linear_model import LinearRegression
-        model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees'):
-        from sklearn.ensemble import ExtraTreesClassifier
-        model = ExtraTreesClassifier(n_estimators=300)
-    elif (mlAlgo == 'Random Forest'):
-        from sklearn.ensemble import RandomForestClassifier
-        model = RandomForestClassifier(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost'):
-        from sklearn.ensemble import AdaBoostClassifier
-        model = AdaBoostClassifier(n_estimators=500)
+    model = projectapiView.mlAlgoList(mlAlgo)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
     # print("After 1")
@@ -210,99 +166,50 @@ def applyMLAlgo(mlAlgo, features):
     X = data[featuresNames]
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
-    if(mlAlgo == 'Decision Tree'):
-        from sklearn.tree import DecisionTreeClassifier
-        model = DecisionTreeClassifier()
-    elif(mlAlgo == 'Logestic Regression'):
-        from sklearn.linear_model import LogisticRegression
-        model = LogisticRegression()
-    elif(mlAlgo == 'K-Nearest Neighbors(KNN)'):
-        from sklearn.neighbors import KNeighborsClassifier
-        model = KNeighborsClassifier()
-    elif(mlAlgo == 'Linear Discriminant Analysis'):
-        from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-        model = LinearDiscriminantAnalysis()
-    elif(mlAlgo == 'Naive Bayes (Gaussian NB)'):
-        from sklearn.naive_bayes import GaussianNB
-        model = GaussianNB()
-    elif(mlAlgo == 'Support Vector Machine (SVM)'):
-        from sklearn.svm import SVC
-        model = SVC()
-    elif (mlAlgo == 'Linear Regression'):
-        from sklearn.linear_model import LinearRegression
-        model = LinearRegression()
-    elif (mlAlgo == 'Extra Trees'):
-        from sklearn.ensemble import ExtraTreesClassifier
-        model = ExtraTreesClassifier(n_estimators=300)
-    elif (mlAlgo == 'Random Forest'):
-        from sklearn.ensemble import RandomForestClassifier
-        model = RandomForestClassifier(n_estimators=300)
-    elif (mlAlgo == 'Ada Boost'):
-        from sklearn.ensemble import AdaBoostClassifier
-        model = AdaBoostClassifier(n_estimators=500)
+    model = projectapiView.mlAlgoList(mlAlgo)
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
     score = accuracy_score(y_test, prediction.round())
     print("Score : ", score)
     result = model.predict([[float(i) for i in featuresValues]])
     print("Result : ", result)
-
-    # a = {"result": result[0],
-    #      "Accuracy_Score": score,
-
-    #      }
     return score, result
 
 
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def getTwoFeaturesNames(request):
-    # method = request.data["method"]
     print(request.data)
     features1 = dmFeatureComparison(
         request.data["a1"],
         request.data["a2"],
-        # request.data['featuresCount'],
-        # request.data['targetClass'],
+        request.data['csvFile']
     )
     features2 = dmFeatureComparison(
         request.data["b1"],
         request.data["b2"],
-        # request.data['featuresCount'],
-        # request.data['targetClass'],
+        request.data['csvFile']
     )
     a = {"First": features1, "Second": features2}
     return Response(a)
-    # return Response {"First": features1, "Second": features2}
-
-# @decorators.api_view(["POST"])
-# @decorators.permission_classes([permissions.AllowAny])
 
 
-def dmFeatureComparison(method1, method2):
-    # method = request.data["method"]
-    # print(request.data)
-    # print("X ::", X, y)
+def dmFeatureComparison(method1, method2, datasetName):
 
     a = returnFeatuesList(
-        # featuresCount,
         method1,
         method2,
-        # target
-        # X, y
-        # request.data['X'],
-        # request.data['y'],
+        datasetName,
     )
-    # print(a)
     return a
-    # return Response(a)
 
 
-def returnFeatuesList(method, method1):
-    # print(numberOfFeatures, method, method1, X, y)
-    data, X, y = readCsv()
-    # y = data[target]
-    encoded = conversion_to_defects(data)
+def returnFeatuesList(method, method1, datasetName):
+    data, X, y = projectapiView.readCsv(datasetName)
+    if(datasetName == 'ISBSG'):
+        encoded = conversion_to_defects(data)
+    else:
+        encoded = y
     if(method == 'Filter Method (Kbest)'):
         featureList = kbest(X, encoded)
         return featureList
@@ -339,14 +246,11 @@ def recursive(method, X, y):
         model = LogisticRegression()
     rfe = RFE(model, 10, step=1)
     fitRecursive = rfe.fit(X.abs(), y)
-    # print(rfe)
     d2 = {'Feature': X.columns, "Score": fitRecursive.ranking_}
     df2 = pd.DataFrame(d2)
     df2['Score'] = df2['Score']
     a = df2
-#     print(a)
     d = dict(a[a["Score"] == 1])
-    # print(d["Feature"])
     return d["Feature"]
 
 
@@ -354,11 +258,6 @@ def kbest(X, y):
     from sklearn.feature_selection import SelectKBest, f_classif
     from sklearn.feature_selection import chi2
     test = SelectKBest(chi2, k=10)
-    # X1 = pd.DataFrame()
-    # for i in X.columns:
-    # X[i] = pd.to_numeric(X[i], errors='coerce').fillna(0, downcast='infer')
-    # X[i] = X[i].values.reshape(2, 2)
-    # X[i] = pd.to_numeric(X[i], errors='coerce')
     fit = test.fit(X.abs(), y)
     d = {'Feature': X.columns.values, "Score": fit.scores_}
     df = pd.DataFrame(d)

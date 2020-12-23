@@ -97,7 +97,6 @@ def ifpug(request):
             high_count+=1
     ei_summary_count=[low_count,avg_count,high_count]
 
-
     # #2d. External Outputs (EOs)
     eo_summary=[]
     eo_loop=request.data['EO']
