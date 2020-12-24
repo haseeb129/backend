@@ -36,10 +36,10 @@ from bson import ObjectId
 
 def readCsv(datasetName):
     print("Dataset Name", datasetName)
-    if datasetName == "ISBSG":
+    if datasetName == "isbsg":
         data = pd.read_csv(os.getcwd() +
                            '\\csv\\fully_final_1.csv')
-    elif datasetName.__contains__("Promise"):
+    elif datasetName.__contains__("promise"):
         csv = datasetName.split(" ")
         print(type(csv[1]))
         print(type(os.getcwdb()))
