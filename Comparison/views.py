@@ -206,7 +206,7 @@ def dmFeatureComparison(method1, method2, datasetName):
 
 def returnFeatuesList(method, method1, datasetName):
     data, X, y = projectapiView.readCsv(datasetName)
-    if(datasetName == 'ISBSG'):
+    if(datasetName == 'isbsg'):
         encoded = conversion_to_defects(data)
     else:
         encoded = y
