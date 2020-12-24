@@ -36,10 +36,10 @@ from bson import ObjectId
 
 def readCsv(datasetName):
     print("Dataset Name", datasetName)
-    if datasetName == "ISBSG":
+    if datasetName == "isbsg":
         data = pd.read_csv(os.getcwd() +
                            '\\csv\\fully_final_1.csv')
-    elif datasetName.__contains__("Promise"):
+    elif datasetName.__contains__("promise"):
         csv = datasetName.split(" ")
         print(type(csv[1]))
         print(type(os.getcwdb()))
@@ -181,6 +181,32 @@ def applyMLAlgo(request):
     elif (classification == "Penta"):
         response = resultOfMl(result, auc, roc, y_test, prediction)
         return Response(response)
+
+
+def ternaryGraph():
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import label_binarize
+    from sklearn.metrics import roc_curve, auc
+    from sklearn.multiclass import OneVsRestClassifier
+    y_bin = label_binarize(a, classes=[0, 1, 2])
+    print(y_bin)
+    n_classes = y_bin.shape[1]
+    # We split the data into training and test sets
+    # X_train, X_test, y_train, y_test = train_test_split(X, y_bin, test_size= 0.5, random_state=0)
+    trainX, testX, trainy, testy = train_test_split(
+        X, y_bin, test_size=0.5, random_state=0)
+
+    classifier = OneVsRestClassifier(
+        svm.SVC(kernel='linear', probability=True, random_state=0))
+    y_score = classifier.fit(X_train, y_train).decision_function(X_test)
+    # Plotting and estimation of FPR, TPR
+    fpr = dict()
+    tpr = dict()
+    roc_auc = dict()
+    for i in range(n_classes):
+        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
+        roc_auc[i] = auc(fpr[i], tpr[i])
+    return fpr, tpr
 
 
 def resultOfMl(result, auc, roc, y_test, prediction):
