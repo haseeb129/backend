@@ -158,55 +158,34 @@ def applyMLAlgo(request):
     model.fit(X_train, y_train)
     prediction = model.predict(X_test)
     result = model.predict([[float(i) for i in featuresValues]])
-    # For Post Prediction
-    lr_probs = model.predict_proba(X_test)
-    lr_probs = lr_probs[:, 1]
-    if(classification == 'Binary'):
-        lr_auc = roc_auc_score(y_test, lr_probs)
-    else:
-        lr_auc = multiclass_roc_auc_score(y_test, lr_probs)
-    print('Logistic: ROC AUC=%.3f' % (lr_auc))
-    lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
-    roc = conversion(lr_fpr, lr_tpr)
-    lr_precision, lr_recall, _ = precision_recall_curve(y_test, lr_probs)
-    lr_f1, lr_auc = f1_score(y_test, prediction), auc(lr_recall, lr_precision)
-    auc = conversion(lr_recall, lr_precision)
-    # End Post Prediction
     if(classification == "Binary"):
+        # For Post Prediction
+        lr_probs = model.predict_proba(X_test)
+        lr_probs = lr_probs[:, 1]
+        if(classification == 'Binary'):
+            lr_auc = roc_auc_score(y_test, lr_probs)
+        else:
+            lr_auc = multiclass_roc_auc_score(y_test, lr_probs)
+        print('Logistic: ROC AUC=%.3f' % (lr_auc))
+        lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
+        roc = conversion(lr_fpr, lr_tpr)
+        lr_precision, lr_recall, _ = precision_recall_curve(y_test, lr_probs)
+        lr_f1, lr_auc = f1_score(y_test, prediction), auc(
+            lr_recall, lr_precision)
+        auc = conversion(lr_recall, lr_precision)
+        # End Post Prediction
         response = resultOfMl(result, auc, roc, y_test, prediction)
         return Response(response)
     elif (classification == "Ternary"):
+        auc = ""
+        roc = ""
         response = resultOfMl(result, auc, roc, y_test, prediction)
         return Response(response)
     elif (classification == "Penta"):
+        auc = ""
+        roc = ""
         response = resultOfMl(result, auc, roc, y_test, prediction)
         return Response(response)
-
-
-def ternaryGraph():
-    from sklearn.model_selection import train_test_split
-    from sklearn.preprocessing import label_binarize
-    from sklearn.metrics import roc_curve, auc
-    from sklearn.multiclass import OneVsRestClassifier
-    y_bin = label_binarize(a, classes=[0, 1, 2])
-    print(y_bin)
-    n_classes = y_bin.shape[1]
-    # We split the data into training and test sets
-    # X_train, X_test, y_train, y_test = train_test_split(X, y_bin, test_size= 0.5, random_state=0)
-    trainX, testX, trainy, testy = train_test_split(
-        X, y_bin, test_size=0.5, random_state=0)
-
-    classifier = OneVsRestClassifier(
-        svm.SVC(kernel='linear', probability=True, random_state=0))
-    y_score = classifier.fit(X_train, y_train).decision_function(X_test)
-    # Plotting and estimation of FPR, TPR
-    fpr = dict()
-    tpr = dict()
-    roc_auc = dict()
-    for i in range(n_classes):
-        fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_score[:, i])
-        roc_auc[i] = auc(fpr[i], tpr[i])
-    return fpr, tpr
 
 
 def resultOfMl(result, auc, roc, y_test, prediction):
@@ -220,10 +199,13 @@ def resultOfMl(result, auc, roc, y_test, prediction):
     matrix = confusion_matrix(y_test, prediction)
     report = classification_report(
         y_test, prediction, output_dict=True)
+    print(result)
     if(result[0] == 0):
         res = "No Defects Detected"
     elif(result[0] == 1):
         res = "Defects Detected"
+    else:
+        res = result[0]
     a = {
         "result": res,
         "score": int(score*100),
