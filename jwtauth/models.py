@@ -6,6 +6,7 @@ from djongo import models
 
 class User(models.Model):
     _id = models.ObjectIdField()
+    # id = models.IntegerField(max_length=200)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)

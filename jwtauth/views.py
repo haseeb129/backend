@@ -15,7 +15,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.contrib import auth
 from rest_framework.generics import GenericAPIView
-
+from .models import User
 User = get_user_model()
 
 
@@ -76,3 +76,26 @@ def login(request):
 
         # SEND RES
     return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+# def getAllUser()
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def getAllUser(request):
+    users = User.objects.all()
+    userList = []
+    data = [{'userName': user.username, "ID": str(user.id)}
+            for user in users]
+    print("data: ", users[0].id)
+    return Response(data)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def deleteUser(request):
+    print(request.data)
+    username = request.data['username']
+    user = User.objects.get(username=username)
+    # print("User: ", user)
+    user.delete()
+    return Response("Successfully Deleted")

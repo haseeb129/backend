@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     'Comparison',
     'StatsUploadDataset',
     'COSMIC',
-    # 'jwtauth'
+    'jwtauth'
 ]
 
 MIDDLEWARE = [
