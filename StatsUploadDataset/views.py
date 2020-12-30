@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework import decorators, permissions
 import pandas as pd
 import numpy as np
-# from .models import csvName
+from projectapi import views as projectApiView
 
 
 @decorators.api_view(["POST"])
@@ -16,58 +16,19 @@ import numpy as np
 def upload(request):
     # './csv/'
     print("request", request.data)
-    filePath = request.data['filePath']
-    pandafile = pd.read_csv(
-        './csv/'+filePath, encoding="ISO-8859-1", error_bad_lines=False)
-    pandafile = make(pandafile)
-    columns = pandafile.columns
-    return Response({"pandafile": pandafile, "columns": columns, "info": pandafile.info(verbose=False), "filePath": filePath})
-
-
-# @decorators.api_view(["GET"])
-# @decorators.permission_classes([permissions.AllowAny])
-# def upload(request):
-#     print("request", request.data)
-#     parser_class = (FileUploadParser,)
-#     if 'file' not in request.data:  # if file not present
-#         raise ParseError("Empty content")
-#     f = request.data['file']
-#     filename = request.data['name']
-#     pandafile = pd.read_csv(f, encoding="ISO-8859-1", error_bad_lines=False)
-#     pandafile = make(pandafile)
-#     df = pd.DataFrame(pandafile)
-#     db = csvName(name=filename)
-#     path = './csv/'+filename
-#     columns=pandafile.columns
-#     df.to_csv(path, index=False, header=True)
-#     db.save()
-#     # df.to_csv(filename, index=False)
-#     # pand = pd.read_csv(path, encoding="ISO-8859-1",error_bad_lines=False)
-    # return Response({"pandafile":pandafile,"columns":columns,"info": pandafile.info(verbose=False),"filePath":path})
-# #
-
-# @decorators.api_view(["POST"])
-# @decorators.permission_classes([permissions.AllowAny])
-# def readUploadedFile(request):
-#     print("request", request.data)
-#     filePath = request.data['filePath']
-#     pandafile = pd.read_csv(filePath, encoding="ISO-8859-1", error_bad_lines=False)
-#     pandafile = make(pandafile)
-#     columns=pandafile.columns
-#     return Response({"pandafile":pandafile,"columns":columns,"info": pandafile.info(verbose=False),"filePath":filePath})
+    datasetName = request.data['datasetName']
+    data, X, y = projectApiView.readCsv(datasetName)
+    columns = data.columns
+    return Response({"pandafile": data, "columns": columns, "info": data.info(verbose=False), "filePath": datasetName})
 
 
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def datasetStats(request):
     print("request", request.data)
-    filePath = request.data['filePath']
-    pandafile = pd.read_csv(
-        './csv/'+filePath, encoding="ISO-8859-1", error_bad_lines=False)
-    pandafile = make(pandafile)
-    # print(pandafile["Unnamed: 0"])
-    colNames, colType, colNullValues, colNotNullValues = datasetDetails(
-        pandafile)
+    datasetName = request.data['datasetName']
+    data, X, y = projectApiView.readCsv(datasetName)
+    colNames, colType, colNullValues, colNotNullValues = datasetDetails(data)
     return Response({"colNames": colNames, "colType": colType, "colNullValues": colNullValues, "colNotNullValues": colNotNullValues})
 
 
@@ -95,11 +56,11 @@ def datasetDetails(data):
             colType.append("object")
         if(str(data[col]).__contains__("int")):
             colType.append("int")
+        if(str(data[col]).__contains__("bool")):
+            colType.append("boolean")
         colNotNullValues.append(data[col].value_counts().sum()-countNull)
         colNullValues.append(countNull)
         countNull = 0
-    # print(colNullValues)
-    # a = json.JSONEncoder.default(self, colType)
     return colNames, colType, colNullValues, colNotNullValues
 
 
@@ -107,10 +68,11 @@ def datasetDetails(data):
 @decorators.permission_classes([permissions.AllowAny])
 def columnDetails(request):
     print("columnDetails Request", request.data)
-    filePath = request.data['filePath']
-    pandafile = pd.read_csv('./csv/'+filePath)
+    datasetName = request.data['datasetName']
+    data, X, y = projectApiView.readCsv(datasetName)
+    # pandafile = pd.read_csv('./csv/'+filePath)
     column = request.data['column']
-    dataColumn = pandafile[column]
+    dataColumn = data[column]
     dic = dataColumnDetails(dataColumn)
     # if(dataColumn.dtypes == object):
     #     # print("Dealing with object")
@@ -137,6 +99,7 @@ def dataColumnDetails(dataColumn):
                 "Max": dataColumn.max(),
                 "Mean": dataColumn.mean(axis=0),
                 "Mediam": dataColumn.median(axis=0),
+                "dataColumn": dataColumn,
                 "Standerd Deviation": dataColumn.std(axis=0),
                 "Null Values": nullvales,
                 "Not Null Values": dataColumn.notnull().sum(axis=0)-nullvales, "type": "INT-FLOAT"}

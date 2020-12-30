@@ -36,6 +36,7 @@ from bson import ObjectId
 
 def readCsv(datasetName):
     print("Dataset Name", datasetName)
+    datasetName = datasetName.lower()
     if datasetName == "isbsg":
         data = pd.read_csv(os.getcwd() +
                            '\\csv\\fully_final_1.csv')
