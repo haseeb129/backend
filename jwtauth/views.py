@@ -5,6 +5,7 @@ from rest_framework import permissions
 from rest_framework import response, decorators, permissions, status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import UserCreateSerializer, LoginSerializer, UserSerializer
+from rest_framework import serializers
 
 from rest_framework.decorators import api_view
 
@@ -15,7 +16,7 @@ from rest_framework.response import Response
 from django.conf import settings
 from django.contrib import auth
 from rest_framework.generics import GenericAPIView
-
+from .models import User
 User = get_user_model()
 
 
@@ -76,3 +77,57 @@ def login(request):
 
         # SEND RES
     return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+# def getAllUser()
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def getAllUser(request):
+    users = User.objects.all()
+    userList = []
+    data = [{'username': user.username, "email": str(user.email)}
+            for user in users]
+    print("data: ", users[0].email)
+    return Response(data)
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def deleteUser(request):
+    print(request.data)
+    username = request.data['username']
+    user = User.objects.get(username=username)
+    # print("User: ", user)
+    user.delete()
+    return Response("Successfully Deleted")
+
+
+@decorators.api_view(["POST"])
+@decorators.permission_classes([permissions.AllowAny])
+def resetPassword(request):
+    print(request.data)
+    serializer = LoginSerializer(data=request.data)
+    data = request.data
+    username = data.get('username', '')
+    password = data.get('password', '')
+    newPassword = data.get('password1', '')
+    id = data.get('_id', '')
+    print("ID: ", id)
+    user = auth.authenticate(username=username, password=password)
+    if user:
+        print("After auth", user)
+        u1 = User.objects.get(username=username)
+        u1.set_password(newPassword)
+        u1.save()
+        auth_token = jwt.encode(
+            {'username': u1.username}, settings.SECRET_KEY)
+        # print(user)
+        serializer = UserSerializer(u1)
+
+        data = {'user': serializer.data, 'token': auth_token}
+        print("data is ", data)
+        return Response(data, status=status.HTTP_200_OK)
+    else:
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        # return Response("Old Password Not Match. Please try Again")
+    # return Response(u1.username)
