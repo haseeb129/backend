@@ -96,7 +96,6 @@ def dataColumnDetails(dataColumn):
     else:
         nullvales = (dataColumn == 123456789).sum()
         return {"Min": dataColumn.min(),
-                "dataColumn":dataColumn,
                 "Max": dataColumn.max(),
                 "Mean": dataColumn.mean(axis=0),
                 "Mediam": dataColumn.median(axis=0),
