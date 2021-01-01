@@ -9,6 +9,7 @@ from rest_framework import decorators, permissions
 import pandas as pd
 import numpy as np
 from .models import csvName
+from UploadFile import views as statsView
 
 
 @decorators.api_view(["POST"])
@@ -25,12 +26,12 @@ def upload(request):
     df = pd.DataFrame(pandafile)
     db = csvName(name=filename)
     path = './csv/'+filename
-    columns=pandafile.columns
+    columns = pandafile.columns
     df.to_csv(path, index=False, header=True)
     db.save()
     # df.to_csv(filename, index=False)
     # pand = pd.read_csv(path, encoding="ISO-8859-1",error_bad_lines=False)
-    return Response({"pandafile":pandafile,"columns":columns,"info": pandafile.info(verbose=False),"filePath":path})
+    return Response({"pandafile": pandafile, "columns": columns, "info": pandafile.info(verbose=False), "filePath": path})
 
 
 @decorators.api_view(["POST"])
@@ -38,11 +39,13 @@ def upload(request):
 def readUploadedFile(request):
     print("request", request.data)
     filePath = request.data['filePath']
-    pandafile = pd.read_csv(filePath, encoding="ISO-8859-1", error_bad_lines=False)
-    pandafile = make(pandafile)   
-    columns=pandafile.columns
-    return Response({"pandafile":pandafile,"columns":columns,"info": pandafile.info(verbose=False),"filePath":filePath})
-
+    pandafile = pd.read_csv(
+        filePath, encoding="ISO-8859-1", error_bad_lines=False)
+    pandafile = make(pandafile)
+    df = datasetStats(pandafile)
+    columns = pandafile.columns
+    return Response({"data": df, "pandafile": pandafile, "columns": columns, "info": pandafile.info(verbose=False), "filePath": filePath})
+    # return Response({"pandafile":pandafile,"columns":columns,"info": pandafile.info(verbose=False),"filePath":filePath})
 
 
 @decorators.api_view(["POST"])
@@ -53,7 +56,7 @@ def columnDetails(request):
     pandafile = pd.read_csv(filePath)
     column = request.data['column']
     dataColumn = pandafile[column]
-    dic=dataColumnDetails(dataColumn)
+    dic = dataColumnDetails(dataColumn)
     return Response(dic)
 
 
@@ -62,15 +65,15 @@ def dataColumnDetails(dataColumn):
         nullvales = (dataColumn == 'Null').sum()
         return {"Null Values": nullvales, "Not Null Values": dataColumn.notnull().sum(axis=0)-nullvales, "type": "String/Object", "Unique Values": objetToDict(dataColumn.value_counts(dropna=False))}
     else:
-        nullvales = (dataColumn== 123456789).sum()
+        nullvales = (dataColumn == 123456789).sum()
         return {"Min": dataColumn.min(),
-                    "Max": dataColumn.max(),
-                    "Mean": dataColumn.mean(axis=0),
-                    "Mediam": dataColumn.median(axis=0),
-                    "Standerd Deviation": dataColumn.std(axis=0),
-                    "Null Values": nullvales,
-                    "Not Null Values": dataColumn.notnull().sum(axis=0)-nullvales, "type": "INT-FLOAT"}
- 
+                "Max": dataColumn.max(),
+                "Mean": dataColumn.mean(axis=0),
+                "Mediam": dataColumn.median(axis=0),
+                "Standerd Deviation": dataColumn.std(axis=0),
+                "Null Values": nullvales,
+                "Not Null Values": dataColumn.notnull().sum(axis=0)-nullvales, "type": "INT-FLOAT"}
+
 
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
@@ -103,7 +106,7 @@ def fillNullValuesOfColumn(request):
     pandafile[request.data['column']].replace(
         123456789, float(stringValue), inplace=True)
     savePandaFile1(pandafile, filePath)
-    return Response({"pandafile": pandafile, "columns": pandafile.columns,"ColumnDetails":dataColumnDetails(column) })
+    return Response({"pandafile": pandafile, "columns": pandafile.columns, "ColumnDetails": dataColumnDetails(column)})
 
 
 @decorators.api_view(["POST"])
@@ -123,7 +126,7 @@ def fillNullValuesOfColumnString(request):
         pandafile[request.data['column']].replace(
             request.data['to_replace_value'], request.data['to_value'], inplace=True)
     savePandaFile1(pandafile, filePath)
-    return Response({"pandafile": pandafile, "columns": pandafile.columns,"ColumnDetails":dataColumnDetails(column) })
+    return Response({"pandafile": pandafile, "columns": pandafile.columns, "ColumnDetails": dataColumnDetails(column)})
 
 
 def make(pandafile):
@@ -164,3 +167,45 @@ def savePandaFile(pandafile, fileName):
 def savePandaFile1(pandafile, fileName):
     df = pd.DataFrame(pandafile)
     df.to_csv(fileName, index=False)
+
+
+def datasetStats(pandafile):
+    # print("Pandfile", pandafile)
+    # print("request", request.data)
+    # datasetName = request.data['datasetName']
+    # data, X, y = projectApiView.readCsv(datasetName)
+    colNames, colType, colNullValues, colNotNullValues = datasetDetails(
+        pandafile)
+    return ({"colNames": colNames, "colType": colType, "colNullValues": colNullValues, "colNotNullValues": colNotNullValues})
+
+
+def datasetDetails(data):
+    import json
+    # import self
+    colNames = []
+    colType = []
+    colNullValues = []
+    colNotNullValues = []
+    colInstanses = []
+    countNull = 0
+    for col in data:
+        colNames.append(col)
+        for i in data[col]:
+            # print("in for")
+            if(i == "Null" or i == 123456789):
+                # print("Null Values", countNull)
+                countNull += 1
+                # print(countNull)
+
+        if(str(data[col]).__contains__("float")):
+            colType.append("float")
+        if(str(data[col]).__contains__("object")):
+            colType.append("object")
+        if(str(data[col]).__contains__("int")):
+            colType.append("int")
+        if(str(data[col]).__contains__("bool")):
+            colType.append("boolean")
+        colNotNullValues.append(data[col].value_counts().sum()-countNull)
+        colNullValues.append(countNull)
+        countNull = 0
+    return colNames, colType, colNullValues, colNotNullValues
