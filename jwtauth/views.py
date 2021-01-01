@@ -111,9 +111,10 @@ def resetPassword(request):
     username = data.get('username', '')
     password = data.get('password', '')
     newPassword = data.get('password1', '')
-    id = data.get('_id', '')
-    print("ID: ", id)
+    # id = data.get('_id', '')
+    # print("ID: ", id)
     user = auth.authenticate(username=username, password=password)
+    print("Before: ",user)
     if user:
         print("After auth", user)
         u1 = User.objects.get(username=username)
@@ -129,5 +130,3 @@ def resetPassword(request):
         return Response(data, status=status.HTTP_200_OK)
     else:
         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        # return Response("Old Password Not Match. Please try Again")
-    # return Response(u1.username)

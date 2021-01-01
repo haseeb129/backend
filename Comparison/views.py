@@ -28,48 +28,12 @@ from rest_framework import response, decorators, permissions, status
 from projectapi import views as projectapiView
 
 
-def readCsv():
-    # datasetName == "ISBSG"
-    data = pd.read_csv(os.getcwd() +
-                       '\\csv\\fully_final_1.csv')
-    X = data.drop(data.columns[-1], axis=1)
-    y = data[data.columns[-1]]
-    return data, X, y
-
-
-def conversion_to_defects(data):
-    def checkDefects(col):
-        if float(col) != 0:
-            if float(col) <= 10:
-                return "low"
-            elif float(col) > 10 and float(col) <= 15:
-                return "mediam"
-            else:
-                return "high"
-            pass
-        else:
-            return 'Defects Present'
-
-    def invertValues(col):
-        if float(col) == 0:
-            return 1
-        else:
-            return 0
-    a = data["Defect Density"].apply(checkDefects)
-    new = pd.get_dummies(a)
-    # print(new)
-    new["Defects Present"] = new["Defects Present"].apply(invertValues)
-    defect_present = new['Defects Present']
-    y = defect_present
-    return y
-
-
 @decorators.api_view(["POST"])
 @decorators.permission_classes([permissions.AllowAny])
 def getFeaturesNames(request):
     print("Request getFeaturesNames", request.data)
     dataset = request.data['datasetName']
-    data, X, y = readCsv()
+    data, X, y = projectapiView.readCsv(dataset)
     return Response(data.columns)
 
 
@@ -79,10 +43,12 @@ def comparisonOfAllMLAlgo(request):
     print(request.data)
     listOfMlAlgo = request.data["list"]
     features = request.data['features']
+    datasetName = request.data['datasetName']
     list = []
     for mlAlgo in listOfMlAlgo:
         print(mlAlgo)
-        accuracy_score = applyMLAlgoWithoutInputValues(mlAlgo, features)
+        accuracy_score = applyMLAlgoWithoutInputValues(
+            mlAlgo, features, datasetName)
         list.append({"MLName": mlAlgo, "score": accuracy_score})
     return Response(list)
 
@@ -93,9 +59,10 @@ def withInputValuesComparisonML(request):
     print(request.data)
     listOfMlAlgo = request.data["list"]
     features = request.data['inputFields']
+    datasetName = request.data['datasetName']
     list = []
     for mlAlgo in listOfMlAlgo:
-        accuracy_score, result = applyMLAlgo(mlAlgo, features)
+        accuracy_score, result = applyMLAlgo(mlAlgo, features, datasetName)
         list.append(
             {"MLName": mlAlgo, "score": accuracy_score, "result": int(result[0])})
     return Response(list)
@@ -126,12 +93,12 @@ def inputValueComparisonML(request):
 
     print("PAth.      :", os.getcwd())
     ml1 = applyMLAlgo(
-
+        request.data["datasetName"],
         request.data["MLAlgorithm1"],
         request.data["inputFields"],
     )
     ml2 = applyMLAlgo(
-
+        request.data["datasetName"],
         request.data["MLAlgorithm2"],
         request.data["inputFields"],
     )
@@ -139,9 +106,9 @@ def inputValueComparisonML(request):
     return Response(a)
 
 
-def applyMLAlgoWithoutInputValues(mlAlgo, features):
-    data, X, y1 = readCsv()
-    y = conversion_to_defects(data)
+def applyMLAlgoWithoutInputValues(mlAlgo, features, datasetName):
+    data, X, y1 = projectapiView.readCsv(datasetName)
+    y = projectapiView.conversion_to_defects(data)
     X = data[features]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3)
     model = projectapiView.mlAlgoList(mlAlgo)
@@ -153,9 +120,9 @@ def applyMLAlgoWithoutInputValues(mlAlgo, features):
     return score
 
 
-def applyMLAlgo(mlAlgo, features):
-    data, X, y = readCsv()
-    y = conversion_to_defects(data)
+def applyMLAlgo(mlAlgo, features, datasetName):
+    data, X, y = projectapiView.readCsv(datasetName)
+    y = projectapiView.conversion_to_defects(data)
     sortedArray = sorted(features.items())
     featuresNames = []
     featuresValues = []
@@ -207,7 +174,7 @@ def dmFeatureComparison(method1, method2, datasetName):
 def returnFeatuesList(method, method1, datasetName):
     data, X, y = projectapiView.readCsv(datasetName)
     if(datasetName == 'isbsg'):
-        encoded = conversion_to_defects(data)
+        encoded = projectapiView.conversion_to_defects(data)
     else:
         encoded = y
     if(method == 'Filter Method (Kbest)'):

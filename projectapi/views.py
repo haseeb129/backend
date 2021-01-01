@@ -42,8 +42,8 @@ def readCsv(datasetName):
                            '\\csv\\fully_final_1.csv')
     elif datasetName.__contains__("promise"):
         csv = datasetName.split(" ")
-        print(type(csv[1]))
-        print(type(os.getcwdb()))
+        # print(type(csv[1]))
+        # print(type(os.getcwdb()))
         a = str(os.getcwdb())+str('\\csv\\'+csv[1]+'.csv')
         a = a.replace("'", "")
         a = a.replace("b", "")
@@ -106,9 +106,9 @@ def conversion_to_defects(data):
         else:
             return 0
     a = data[data.columns[-1]].apply(checkDefects)
-    print(a)
+    # print(a)
     new = pd.get_dummies(a)
-    print(new)
+    # print(new)
     new["Defects Present"] = new["Defects Present"].apply(invertValues)
     defect_present = new['Defects Present']
     y = defect_present
@@ -161,13 +161,17 @@ def applyMLAlgo(request):
     result = model.predict([[float(i) for i in featuresValues]])
     if(classification == "Binary"):
         # For Post Prediction
-        lr_probs = model.predict_proba(X_test)
+        if(mlAlgo == 'Ridge'):
+            lr_probs = model.decision_function(X_test)
+            print(lr_probs)
+        else:
+            lr_probs = model.predict_proba(X_test)
         lr_probs = lr_probs[:, 1]
         if(classification == 'Binary'):
             lr_auc = roc_auc_score(y_test, lr_probs)
-        else:
-            lr_auc = multiclass_roc_auc_score(y_test, lr_probs)
-        print('Logistic: ROC AUC=%.3f' % (lr_auc))
+        # else:
+        #     lr_auc = multiclass_roc_auc_score(y_test, lr_probs)
+        # print('Logistic: ROC AUC=%.3f' % (lr_auc))
         lr_fpr, lr_tpr, _ = roc_curve(y_test, lr_probs)
         roc = conversion(lr_fpr, lr_tpr)
         lr_precision, lr_recall, _ = precision_recall_curve(y_test, lr_probs)
@@ -232,8 +236,8 @@ def multiclass_roc_auc_score(y_test, y_pred, average="macro"):
     return roc_auc_score(y_test, y_pred, average=average)
 
 
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def applyMLAlgoWithRegression(request):
     print("applyMLAlgoWithRegression", request.data)
     features = request.data['features']
@@ -263,8 +267,8 @@ def applyMLAlgoWithRegression(request):
     return Response(a)
 
 
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def projectapi_getFeatures(request):
     method = request.data["method"]
     # datasetName = request.data["csvFile"]
@@ -283,8 +287,8 @@ def projectapi_getFeatures1(method):
     return (list)
 
 
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def applyBaggingAlgo(request):
     model = request.data['model']
     numberOfEstimators = request.data['estimators']
@@ -329,8 +333,8 @@ def applyBaggingAlgo(request):
     return Response(results.mean())
 
 
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def applyVotingAlgo(request):
 
     model = VotingClassifier(
@@ -339,8 +343,8 @@ def applyVotingAlgo(request):
     model.score(X_test, y_test)
 
 
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def applyBoostingAlgo(request):
     model = request.data['ensemblingMethod']
     numberOfEstimators = request.data['estimators']
@@ -449,12 +453,26 @@ def mlAlgoList(mlAlgo):
     elif (mlAlgo == 'Ada Boost'):
         from sklearn.ensemble import AdaBoostClassifier
         model = AdaBoostClassifier(n_estimators=500)
+    elif(mlAlgo == 'MLP'):
+        from sklearn.neural_network import MLPClassifier
+        model = MLPClassifier(activation='tanh', alpha=0.05, hidden_layer_sizes=100,
+                              learning_rate='constant', solver='adam', random_state=1)
+    elif(mlAlgo == 'Ridge'):
+        from sklearn.linear_model import RidgeClassifier
+        model = RidgeClassifier(alpha=1.0)
+    elif(mlAlgo == 'SGD'):
+        from sklearn.linear_model import SGDClassifier
+        from sklearn.calibration import CalibratedClassifierCV
+        model = SGDClassifier(max_iter=1000, tol=1e-3,
+                              random_state=1, class_weight='balanced')
+        # calibrator = CalibratedClassifierCV(model, cv='prefit')
+        # model = calibrator
     return model
 
 
-@csrf_exempt
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ csrf_exempt
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def savePreviousProjects(request):
     print(request.data)
     # _id = request.data["_id"]
@@ -465,8 +483,8 @@ def savePreviousProjects(request):
     return Response("Inserted")
 
 
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def getUserlog(request):
     print(request.data)
     # user_id = request.data['id']
@@ -483,8 +501,8 @@ def getUserlog(request):
     return Response(data)
 
 
-@decorators.api_view(["POST"])
-@decorators.permission_classes([permissions.AllowAny])
+@ decorators.api_view(["POST"])
+@ decorators.permission_classes([permissions.AllowAny])
 def deleteUserlog(request):
     print(request.data)
     user_id = request.data['id']
